@@ -1,4 +1,5 @@
 function Start-ReAIService {
+    if (-not (Test-AdminPrivileges)) { Write-Warning 'Administrator privileges required.'; return }
     if (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue) {
         Start-Service -Name $ServiceName
         Write-Host "Service '$ServiceName' started."
@@ -8,6 +9,7 @@ function Start-ReAIService {
 }
 
 function Stop-ReAIService {
+    if (-not (Test-AdminPrivileges)) { Write-Warning 'Administrator privileges required.'; return }
     if (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue) {
         Stop-Service -Name $ServiceName
         Write-Host "Service '$ServiceName' stopped."

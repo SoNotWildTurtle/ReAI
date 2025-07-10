@@ -7,6 +7,7 @@ function Invoke-GPT {
         [int]$MaxRetries = 3,
         [int]$RetryDelay = 5
     )
+    if (-not (Test-SecureNetworkAccess)) { return $null }
     if ([string]::IsNullOrWhiteSpace($OpenAIKey)) {
         Write-Warning "OpenAI API key is not set. Please set the `$OpenAIKey variable."
         return $null
@@ -60,6 +61,7 @@ function Invoke-GPT {
 
 function Search-DuckDuckGo {
     param([string]$Query,[switch]$Tor)
+    if (-not (Test-SecureNetworkAccess)) { return @() }
     $results = @()
     try {
         $uri = "https://html.duckduckgo.com/html?q=$([uri]::EscapeDataString($Query))"
@@ -81,6 +83,7 @@ function Search-DuckDuckGo {
 
 function Search-Google {
     param([string]$Query,[switch]$Tor)
+    if (-not (Test-SecureNetworkAccess)) { return @() }
     $results = @()
     try {
         $uri = "https://www.google.com/search?q=$([uri]::EscapeDataString($Query))&num=5"
@@ -114,6 +117,7 @@ function Search-Web {
         [ValidateSet('duckduckgo','google')]$Engine = 'duckduckgo',
         [switch]$Tor
     )
+    if (-not (Test-SecureNetworkAccess)) { return @() }
     switch ($Engine) {
         'google' { return Search-Google -Query $Query -Tor:$Tor }
         'duckduckgo' { return Search-DuckDuckGo -Query $Query -Tor:$Tor }
@@ -122,6 +126,7 @@ function Search-Web {
 
 function Get-UrlSummary {
     param([string]$Url)
+    if (-not (Test-SecureNetworkAccess)) { return "" }
     try {
         $resp = Invoke-RestMethod -Uri $Url -TimeoutSec 8
         $doc  = ConvertFrom-Html -Content $resp.Content

@@ -13,3 +13,4 @@
 - [x] Implement research summary workflow and business planning.
 - [x] Add Tor-based DuckDuckGo and Google search to research pipeline.
 - [x] Add dynamic goal analysis to generate subgoals for self-improvement.
+- [x] Introduce security module with secure mode and privilege checks.

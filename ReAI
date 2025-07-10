@@ -19,7 +19,9 @@ param(
     [string]$CompleteGoal,
     [switch]$ListGoals,
     [switch]$AnalyzeGoals,
-    [string]$ResearchTopic
+    [string]$ResearchTopic,
+    [switch]$EnableSecureMode,
+    [switch]$DisableSecureMode
 )
 
 # ===== SCRIPT METADATA =====
@@ -90,6 +92,7 @@ if (Test-Path $StateFile) {
         versions   = @()
     }
 }
+Ensure-StateProtection
 
 
 function Import-AllModules {
@@ -116,6 +119,8 @@ if ($CompleteGoal) { Complete-ReAIGoal -Goal $CompleteGoal; return }
 if ($ListGoals) { List-ReAIGoals; return }
 if ($AnalyzeGoals) { Analyze-ReAIGoals; return }
 if ($ResearchTopic) { Invoke-Research -Topic $ResearchTopic; return }
+if ($EnableSecureMode) { Enable-SecureMode; return }
+if ($DisableSecureMode) { Disable-SecureMode; return }
 
 if ($RunTests -or $TestAll -or $TestPortForwarding -or $TestAPI -or $TestStateManagement) {
     $params = @{}

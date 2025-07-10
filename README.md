@@ -15,11 +15,14 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 - `-ListGoals` – display current and completed goals
 - `-AnalyzeGoals` – generate subgoals and improvements automatically
 - `-ResearchTopic "subject"` – generate a research report and business plan
+- `-EnableSecureMode` / `-DisableSecureMode` – toggle network-blocking secure mode
 - `-RunTests` with optional `-TestAll`, `-TestPortForwarding`, `-TestAPI`, `-TestStateManagement` – execute Pester-based tests
 
 Running `./ReAI` with no parameters launches an interactive text menu for these actions.
 
 All state is stored in `state.json` in the project directory.
+The file is secured with restrictive permissions when first loaded.
+Secure mode disables network access for safer experimentation.
 
 ## Directory Layout
 - `ReAI` – main entry script. Loads all modules from `modules/` and exposes CLI commands. Called directly or by the Windows service. It invokes functions from the modules depending on CLI options or launches the menu by default.
@@ -44,3 +47,4 @@ Each module lives under `modules/` and is imported by the main script.
 | `TerminalUI.psm1` | Presents interactive CLI menu when no arguments are passed. | `ReAI` | menu invokes various module functions |
 | `ResearchSummary.psm1` | Generate lab reports, creative articles and business plans from a topic. | `ReAI` when `-ResearchTopic` is used | `Invoke-GPT`, `Search-Web`, `Get-UrlSummary`, `Update-ScriptCode` |
 | `GoalAnalysis.psm1` | Analyze current goals and generate subgoals for self-improvement. | `ReAI` when `-AnalyzeGoals` is used or from menu | `Invoke-GPT`, `Add-ReAIGoal` |
+| `SecurityManagement.psm1` | Provides secure mode, state file protection and admin checks. | imported by `ReAI` | Windows security APIs |

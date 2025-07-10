@@ -23,8 +23,10 @@ All persistent state is stored in `state.json` at the project root.
 - **modules/TerminalUI.psm1** – interactive text menu displayed when `ReAI` is run without parameters.
 - **modules/ResearchSummary.psm1** – generates lab reports, creative articles and business plans from a topic using API utilities and self-refactor. Invoked with the `-ResearchTopic` CLI switch.
 - **modules/GoalAnalysis.psm1** – analyzes current goals and adds new subgoals to improve ReAI. Used when `-AnalyzeGoals` is specified or from the menu.
+- **modules/SecurityManagement.psm1** – enables secure mode, protects the state file and checks admin privileges.
 - **scripts/setup.ps1** – installs required PowerShell modules (PowerHTML, Pester) and prepares runtime directories.
 - **notes/goals.md** – list of project goals with completion checkboxes.
 - **notes/private_notes.txt** – obfuscated personal notes stored in base64.
 \n- Research pipeline now pulls results from Tor-based DuckDuckGo search and Google search for broader coverage.
 - Service monitor now reopens the terminal after restarting the service to maintain persistent I/O.
+- New security module adds secure mode to block network access and protects the state file with ACLs.
