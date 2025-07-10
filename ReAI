@@ -10,7 +10,16 @@ param(
     [switch]$TestAll,
     [switch]$TestPortForwarding,
     [switch]$TestAPI,
-    [switch]$TestStateManagement
+    [switch]$TestStateManagement,
+    [switch]$StartService,
+    [switch]$StopService,
+    [switch]$Terminal,
+    [switch]$Monitor,
+    [string]$AddGoal,
+    [string]$CompleteGoal,
+    [switch]$ListGoals,
+    [switch]$AnalyzeGoals,
+    [string]$ResearchTopic
 )
 
 # ===== SCRIPT METADATA =====
@@ -41,11 +50,17 @@ $ScriptsDir   = Join-Path $WorkDir "scripts"
 $ReportsDir   = Join-Path $WorkDir "reports"
 $ScriptName   = Split-Path -Leaf $MyInvocation.MyCommand.Path
 $ServiceName  = "MINC_ResearchAI"
+$LogFile     = Join-Path $WorkDir "reai.log"
 $ServicePath  = "& `"$PSHOME\powershell.exe`" -NoProfile -ExecutionPolicy Bypass -File `"$WorkDir\$ScriptName`""
+try { Start-Transcript -Path $LogFile -Append -ErrorAction Stop } catch {}
+
 
 foreach ($dir in @($ModulesDir, $ScriptsDir, $ReportsDir)) {
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
 }
+
+# Load any local modules for extended functionality
+Import-AllModules
 
 if ($InstallService) {
     if (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue) {
@@ -76,683 +91,43 @@ if (Test-Path $StateFile) {
     }
 }
 
-function Save-State {
-    $State | ConvertTo-Json -Depth 5 | Set-Content $StateFile
-}
-
-function Invoke-GPT {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
-        [array]$Messages,
-        
-        [int]$Max = 1500,
-        [int]$MaxRetries = 3,
-        [int]$RetryDelay = 5
-    )
-    
-    if ([string]::IsNullOrWhiteSpace($OpenAIKey)) {
-        Write-Warning "OpenAI API key is not set. Please set the `$OpenAIKey variable."
-        return $null
-    }
-
-    $body = @{
-        model       = $Model
-        messages    = $Messages
-        max_tokens  = $Max
-        temperature = 0.7
-    }
-    
-    $headers = @{
-        Authorization = "Bearer $OpenAIKey"
-        "Content-Type" = "application/json"
-    }
-    
-    $attempt = 0
-    $lastError = $null
-    
-    while ($attempt -lt $MaxRetries) {
-        try {
-            $attempt++
-            
-            $apiUrl = if ($global:OpenAIEndpoint) {
-        "$($global:OpenAIEndpoint)/v1/chat/completions"
-    } else {
-        "https://api.openai.com/v1/chat/completions"
-    }
-    
-    $response = Invoke-RestMethod -Uri $apiUrl `
-                -Method Post `
-                -Headers $headers `
-                -Body ($body | ConvertTo-Json -Depth 10) `
-                -ErrorAction Stop
-                
-            return $response.choices[0].message.content
-        }
-        catch {
-            $lastError = $_.Exception
-            
-            # Handle rate limiting and quota issues
-            if ($_.Exception.Response) {
-                $statusCode = [int]$_.Exception.Response.StatusCode
-                $errorDetails = $null
-                
-                try {
-                    $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-                    $reader.BaseStream.Position = 0
-                    $reader.DiscardBufferedData()
-                    $errorResponse = $reader.ReadToEnd() | ConvertFrom-Json -ErrorAction SilentlyContinue
-                    if ($errorResponse) {
-                        $errorDetails = $errorResponse.error.message
-                        Write-Warning "API Error ($statusCode): $errorDetails"
-                        
-                        # If quota exceeded, no point in retrying
-                        if ($errorResponse.error.code -eq 'insufficient_quota') {
-                            Write-Error "OpenAI API quota exceeded. Please check your billing details."
-                            return $null
-                        }
-                    }
-                }
-                catch {
-                    # Couldn't parse error details, use default message
-                    Write-Warning "API Error ($statusCode): $($_.Exception.Message)"
-                }
-                
-                # If it's a 429 (Too Many Requests) or 5xx error, we can retry
-                if ($statusCode -eq 429 -or $statusCode -ge 500) {
-                    $retryAfter = $_.Exception.Response.Headers['Retry-After']
-                    $waitTime = if ($retryAfter) { [int]$retryAfter } else { $RetryDelay * $attempt }
-                    
-                    Write-Warning "Rate limited. Waiting $waitTime seconds before retry (attempt $attempt/$MaxRetries)..."
-                    Start-Sleep -Seconds $waitTime
-                    continue
-                }
-            }
-            
-            # For other errors, just log and retry after delay
-            Write-Warning "API call failed (attempt $attempt/$MaxRetries): $($_.Exception.Message)"
-            if ($attempt -lt $MaxRetries) {
-                Start-Sleep -Seconds ($RetryDelay * $attempt)
-            }
-        }
-    }
-    
-    Write-Error "Failed to complete API call after $MaxRetries attempts. Last error: $($lastError.Message)"
-    return $null
-}
 
 function Import-AllModules {
-    Get-ChildItem -Path $ModulesDir -Filter '*.ps1' | ForEach-Object {
-        try { . $_.FullName; Write-Host "MODULE Loaded: $($_.Name)" }
-        catch { Write-Warning "MODULE Failed to load: $($_.Name)" }
+    Get-ChildItem -Path $ModulesDir -Filter '*.psm1' | ForEach-Object {
+        try {
+            Import-Module $_.FullName -Force
+            Write-Host "MODULE Loaded: $($_.Name)"
+        } catch {
+            Write-Warning "MODULE Failed to load: $($_.Name)"
+        }
     }
 }
 
 Import-Module PowerHTML -ErrorAction Stop
 
-function Search-Web {
-    param([string]$Query)
-    $results = @()
-    try {
-        $html = Invoke-RestMethod "https://html.duckduckgo.com/html?q=$([uri]::EscapeDataString($Query))"
-        $doc  = ConvertFrom-Html -Content $html
-        $nodes = $doc.SelectNodes("//a[contains(@class,'result__a')]") | Select-Object -First 3
-        foreach ($node in $nodes) {
-            $results += @{
-                title = $node.InnerText
-                url   = $node.GetAttributeValue('href','')
-            }
-        }
-    } catch {
-        Write-Warning "Web search failed: $_"
-    }
-    return $results
+
+# === CLI Entry Points ===
+if ($StartService) { Start-ReAIService; return }
+if ($StopService) { Stop-ReAIService; return }
+if ($Terminal) { Open-ReAITerminal; return }
+if ($Monitor) { Monitor-ReAI; return }
+if ($AddGoal) { Add-ReAIGoal -Goal $AddGoal; return }
+if ($CompleteGoal) { Complete-ReAIGoal -Goal $CompleteGoal; return }
+if ($ListGoals) { List-ReAIGoals; return }
+if ($AnalyzeGoals) { Analyze-ReAIGoals; return }
+if ($ResearchTopic) { Invoke-Research -Topic $ResearchTopic; return }
+
+if ($RunTests -or $TestAll -or $TestPortForwarding -or $TestAPI -or $TestStateManagement) {
+    $params = @{}
+    if ($TestAll) { $params.RunAll = $true }
+    if ($TestPortForwarding) { $params.TestPortForwarding = $true }
+    if ($TestAPI) { $params.TestAPI = $true }
+    if ($TestStateManagement) { $params.TestStateManagement = $true }
+    if (-not $params) { $params.RunAll = $true }
+    Import-Module (Join-Path $ModulesDir 'TestSuite.psm1') -Force
+    Invoke-TestSuite @params
+    return
 }
 
-function Get-UrlSummary {
-    param([string]$Url)
-    try {
-        $resp = Invoke-RestMethod -Uri $Url -TimeoutSec 8
-        $doc  = ConvertFrom-Html -Content $resp.Content
-        $text = ($doc.SelectNodes("//p") | Select-Object -First 1).InnerText
-        return Invoke-GPT -Messages @(
-            @{role='system'; content='Summarize this snippet:'},
-            @{role='user';   content=$text}
-        ) -Max 1000
-    } catch {
-        Write-Warning "URL summarization failed: $_"
-        return ""
-    }
-}
 
-function Invoke-GoalProcessing {
-    param([string]$Goal)
-    Write-Host "Iteration $($State.iterations): Goal -> $Goal"
-
-    $plan = Invoke-GPT -Messages @(
-        @{role='system'; content='Plan research steps for this goal.'},
-        @{role='user';   content=$Goal}
-    ) -Max 2000
-
-    $webnotes = (Search-Web $Goal | ForEach-Object {
-        "$($_.title): $(Get-UrlSummary $_.url)"
-    }) -join "`n"
-
-    $code = Invoke-GPT -Messages @(
-        @{role='system'; content='Convert plan and research into a runnable PowerShell script.'},
-        @{role='user';   content="$plan`n$webnotes"}
-    ) -Max 200
-
-    $scriptFile = Join-Path $ScriptsDir ([guid]::NewGuid().ToString() + '.ps1')
-    Set-Content $scriptFile $code
-
-    Start-Process -FilePath "$PSHOME\powershell.exe" `
-        -ArgumentList @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "$scriptFile") `
-        -WindowStyle Hidden -Wait
-
-    $reportName = ($Goal -replace '\s','_') + '.md'
-    $report  = Join-Path $ReportsDir $reportName
-    $summary = Invoke-GPT -Messages @(
-        @{role='system'; content='Summarize findings and propose next steps.'},
-        @{role='user';   content="$plan`n$webnotes"}
-    ) -Max 150
-    Set-Content $report $summary
-
-    $biz = Invoke-GPT -Messages @(
-        @{role='system'; content='Generate executive summary: goals, timeline, budget.'},
-        @{role='user';   content=$summary}
-    ) -Max 1000
-    $bizReport = $report -replace '\.md$', '_biz.md'
-    Set-Content $bizReport $biz
-
-    Write-Host "Report and business summary saved to: $report"
-}
-
-function Update-ScriptCode {
-    try {
-        $scriptPath = if ($MyInvocation.MyCommand.Path) { 
-            $MyInvocation.MyCommand.Path 
-        } else { 
-            $PSCommandPath 
-        }
-        
-        if (-not $scriptPath) {
-            Write-Warning "Cannot determine script path. Self-refactoring skipped."
-            return $false
-        }
-
-        $src = Get-Content -Path $scriptPath -Raw -ErrorAction Stop
-        
-        # Check if we have API access before attempting to refactor
-        $testResponse = Invoke-GPT -Messages @(
-            @{role='system'; content='You are a helpful assistant.'},
-            @{role='user'; content='Say "test"'}
-        ) -Max 10
-
-        if (-not $testResponse) {
-            Write-Warning "API call failed. Check your API key and quota. Self-refactoring skipped."
-            return $false
-        }
-
-        $new = Invoke-GPT -Messages @(
-            @{role='system'; content='Refactor for modularity, add restart loop, dynamic modules; tag MINC_MUTATION.'},
-            @{role='user';   content=$src}
-        ) -Max 200
-
-        if (-not $new) {
-            Write-Warning "Failed to generate new script content. Self-refactoring aborted."
-            return $false
-        }
-
-        $ver = $State.iterations + 1
-        $file = $scriptPath -replace '\.ps1$', "_v$ver.ps1"
-        
-        Set-Content -Path $file -Value $new -Force
-        Write-Host "Self-refactor version saved: $file"
-        $State.versions += $file
-        return $true
-    }
-    catch {
-        Write-Warning "Error during self-refactoring: $_"
-        return $false
-    }
-}
-
-function Start-PortForwarding {
-    [CmdletBinding()]
-    param(
-        [int]$LocalPort,
-        [string]$RemoteHost,
-        [int]$RemotePort
-    )
-    
-    try {
-        Write-Host "Setting up port forwarding: localhost:$LocalPort -> ${RemoteHost}:$RemotePort"
-        
-        # Check if port is available
-        $tcpListener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $LocalPort)
-        $tcpListener.Start()
-        $tcpListener.Stop()
-        
-        # Start port forwarding in background job
-        $jobScript = {
-            param($LocalPort, $RemoteHost, $RemotePort)
-            
-            Add-Type -TypeDefinition @"
-                using System;
-                using System.Net;
-                using System.Net.Sockets;
-                using System.IO;
-                using System.Threading;
-                
-                public class PortForwarder {
-                    public static void Forward(int localPort, string remoteHost, int remotePort) {
-                        TcpListener listener = new TcpListener(IPAddress.Loopback, localPort);
-                        listener.Start();
-                        
-                        while (true) {
-                            try {
-                                using (TcpClient client = listener.AcceptTcpClient())
-                                using (TcpClient target = new TcpClient(remoteHost, remotePort))
-                                using (NetworkStream clientStream = client.GetStream())
-                                using (NetworkStream targetStream = target.GetStream()) {
-                                    byte[] buffer = new byte[4096];
-                                    int bytesRead;
-                                    
-                                    // Forward data in both directions
-                                    while (client.Connected && target.Connected) {
-                                        // Client to target
-                                        if (clientStream.DataAvailable) {
-                                            bytesRead = clientStream.Read(buffer, 0, buffer.Length);
-                                            targetStream.Write(buffer, 0, bytesRead);
-                                        }
-                                        
-                                        // Target to client
-                                        if (targetStream.DataAvailable) {
-                                            bytesRead = targetStream.Read(buffer, 0, buffer.Length);
-                                            clientStream.Write(buffer, 0, bytesRead);
-                                        }
-                                        
-                                        Thread.Sleep(10);
-                                    }
-                                }
-                            }
-                            catch (Exception ex) {
-                                Console.Error.WriteLine($"Forwarding error: {ex.Message}");
-                                Thread.Sleep(1000);
-                            }
-                        }
-                    }
-                }
-"@
-            
-            [PortForwarder]::Forward($LocalPort, $RemoteHost, $RemotePort)
-        }
-        
-        $global:PortForwardJob = Start-Job -ScriptBlock $jobScript -ArgumentList $LocalPort, $RemoteHost, $RemotePort
-        
-        # Update API endpoint to use local port
-        $global:OpenAIEndpoint = "http://localhost:${LocalPort}"
-        
-        Write-Host "Port forwarding started successfully."
-        return $true
-    }
-    catch {
-        Write-Warning "Failed to start port forwarding: $_"
-        return $false
-    }
-}
-
-function Stop-PortForwarding {
-    if ($global:PortForwardJob) {
-        $global:PortForwardJob | Stop-Job -PassThru | Remove-Job -Force
-        $global:PortForwardJob = $null
-        Write-Host "Port forwarding stopped."
-    }
-}
-
-function Test-PortForwarding {
-    [CmdletBinding()]
-    param(
-        [int]$LocalPort = 8080,
-        [int]$TimeoutMs = 2000
-    )
-    
-    try {
-        $tcpClient = New-Object System.Net.Sockets.TcpClient
-        $connect = $tcpClient.BeginConnect('localhost', $LocalPort, $null, $null)
-        $success = $connect.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
-        
-        if ($tcpClient.Connected) {
-            $tcpClient.EndConnect($connect) | Out-Null
-            $tcpClient.Close()
-            return $true
-        }
-        return $false
-    }
-    catch {
-        return $false
-    }
-}
-
-function Test-ScriptDependencies {
-    [CmdletBinding()]
-    param()
-    
-    $requiredModules = @{
-        'PowerHTML' = @{
-            RequiredVersion = $null
-            HelpMessage = 'Install-Module -Name PowerHTML -Force -AllowClobber -Scope CurrentUser'
-        };
-        'Pester' = @{
-            RequiredVersion = '5.3.1'
-            HelpMessage = 'Install-Module -Name Pester -RequiredVersion 5.3.1 -Force -AllowClobber -Scope CurrentUser -SkipPublisherCheck'
-        }
-    }
-    
-    $allRequirementsMet = $true
-    
-    Write-Host "`n=== Checking Dependencies ===" -ForegroundColor Cyan
-    
-    foreach ($moduleName in $requiredModules.Keys) {
-        $moduleInfo = $requiredModules[$moduleName]
-        $requiredVersion = $moduleInfo.RequiredVersion
-        
-        Write-Host "`nChecking module: $moduleName" -NoNewline
-        
-        # Try to get the module
-        $module = Get-Module -Name $moduleName -ListAvailable | 
-                 Sort-Object Version -Descending | 
-                 Select-Object -First 1
-        
-        if (-not $module) {
-            Write-Host " [MISSING]" -ForegroundColor Red
-            Write-Host "  - Required: $moduleName"
-            if ($requiredVersion) {
-                Write-Host "  - Minimum Version: $requiredVersion"
-            }
-            Write-Host "  - Install with: $($moduleInfo.HelpMessage)"
-            $allRequirementsMet = $false
-            continue
-        }
-        
-        # Check version if required
-        if ($requiredVersion) {
-            $versionOk = $module.Version -ge [version]$requiredVersion
-            $status = if ($versionOk) { "[OK]" } else { "[VERSION MISMATCH]" }
-            $color = if ($versionOk) { "Green" } else { "Yellow" }
-            
-            Write-Host " $status" -ForegroundColor $color
-            Write-Host "  - Installed: $($module.Version)"
-            Write-Host "  - Required: >= $requiredVersion"
-            
-            if (-not $versionOk) {
-                Write-Host "  - Update with: $($moduleInfo.HelpMessage)"
-                $allRequirementsMet = $false
-            }
-        } else {
-            Write-Host " [FOUND]" -ForegroundColor Green
-            Write-Host "  - Version: $($module.Version)"
-        }
-    }
-    
-    if (-not $allRequirementsMet) {
-        Write-Host "`nSome dependencies are missing or outdated. Please install/update them first." -ForegroundColor Red
-        Write-Host "You can install missing modules using the commands shown above.`n"
-        return $false
-    }
-    
-    Write-Host "`nAll dependencies are satisfied.`n" -ForegroundColor Green
-    return $true
-}
-
-function Invoke-TestSuite {
-    [CmdletBinding()]
-    param(
-        [switch]$RunAll,
-        [switch]$TestPortForwarding,
-        [switch]$TestAPI,
-        [switch]$TestStateManagement
-    )
-    
-    # Check dependencies first
-    if (-not (Test-ScriptDependencies)) {
-        Write-Error "Missing required dependencies. Please install them first."
-        return $false
-    }
-    
-    # Initialize test results
-    $testResults = @{
-        Total = 0
-        Passed = 0
-        Failed = 0
-        Tests = @()
-    }
-    
-    # Check if any test flags are set
-    $anyTestsRequested = $RunAll -or $TestPortForwarding -or $TestAPI -or $TestStateManagement
-    if (-not $anyTestsRequested) {
-        $RunAll = $true
-    }
-    
-    # Define test cases
-    $testCases = @()
-    
-    if ($RunAll -or $TestStateManagement) {
-        $testCases += 'StateManagement'
-    }
-    
-    if ($RunAll -or $TestPortForwarding) {
-        $testCases += 'PortForwarding'
-    }
-    
-    if ($RunAll -or $TestAPI) {
-        $testCases += 'APITest'
-    }
-    
-    if ($testCases.Count -eq 0) {
-        Write-Warning "No test cases selected. Use -RunAll or specific test flags."
-        return $false
-    }
-    
-    Write-Host "`n=== Starting Test Execution ===" -ForegroundColor Cyan
-    Write-Host "Running tests: $($testCases -join ', ')" -ForegroundColor Green
-    
-    # Run selected tests
-    foreach ($testCase in $testCases) {
-        switch ($testCase) {
-            'StateManagement' { 
-                Write-Host "`n[TEST] Running State Management Tests..." -ForegroundColor Cyan
-                Test-StateManagement -TestResults $testResults 
-            }
-            'PortForwarding' { 
-                Write-Host "`n[TEST] Running Port Forwarding Tests..." -ForegroundColor Cyan
-                Test-PortForwarding -TestResults $testResults 
-            }
-            'APITest' { 
-                Write-Host "`n[TEST] Running API Connectivity Tests..." -ForegroundColor Cyan
-                Test-APIConnectivity -TestResults $testResults 
-            }
-        }
-    }
-    
-    # Display results
-    Write-Host "`n=== Test Results ==="
-    Write-Host "Total Tests:  $($testResults.Total)" -ForegroundColor White
-    Write-Host "Passed:       $($testResults.Passed)" -ForegroundColor Green
-    $failedColor = if ($testResults.Failed -gt 0) { 'Red' } else { 'Green' }
-    Write-Host "Failed:       $($testResults.Failed)" -ForegroundColor $failedColor
-    Write-Host "=================="
-    
-    # Show detailed test results if any tests were run
-    if ($testResults.Total -gt 0) {
-        if ($testResults.Failed -eq 0) {
-            Write-Host "All tests passed successfully!" -ForegroundColor Green
-            return $true
-        } else {
-            # Show failed test details
-            $failedTests = $testResults.Tests | Where-Object { $_.Result -eq 'Failed' }
-            if ($failedTests) {
-                Write-Host "`nFailed Tests:" -ForegroundColor Red
-                foreach ($test in $failedTests) {
-                    Write-Host "- $($test.Name): $($test.Error)" -ForegroundColor Red
-                }
-            }
-            return $false
-        }
-    } else {
-        Write-Warning "No tests were executed. Please check your test selection."
-        return $false
-    }
-}
-
-function Test-StateManagement {
-    [CmdletBinding()]
-    param(
-        [hashtable]$TestResults
-    )
-    
-    $testState = @{
-        goals = @("Test Goal 1", "Test Goal 2")
-        completed = @()
-        iterations = 0
-        versions = @()
-    }
-    
-    $testFile = Join-Path $env:TEMP "test_state_$(Get-Random).json"
-    Write-Host "Using test state file: $testFile"
-    
-    try {
-        # Test saving state
-        Write-Host "Saving test state..."
-        $testState | ConvertTo-Json -Depth 5 | Set-Content $testFile -Force
-        
-        # Test loading state
-        Write-Host "Loading test state..."
-        $loadedState = Get-Content $testFile -Raw | ConvertFrom-Json
-        
-        # Verify loaded state
-        Write-Host "Verifying loaded state..."
-        $result = Assert-Equal -Expected 2 -Actual $loadedState.goals.Count -Message "State should load goals correctly"
-        
-        if ($result) {
-            # Test updating state
-            Write-Host "Updating state with completed goal..."
-            $testState.completed += $testState.goals[0]
-            $testState | ConvertTo-Json -Depth 5 | Set-Content $testFile -Force
-            
-            # Verify updated state
-            Write-Host "Verifying updated state..."
-            $loadedState = Get-Content $testFile -Raw | ConvertFrom-Json
-            Assert-Equal -Expected 1 -Actual $loadedState.completed.Count -Message "State should save completed goals"
-        }
-    } 
-    catch {
-        Write-Error "Error during state management test: $_"
-        throw
-    }
-    finally {
-        if (Test-Path $testFile) { 
-            Write-Host "Cleaning up test file..."
-            Remove-Item $testFile -Force 
-        }
-    }
-    
-    Write-Host "State management tests completed successfully!" -ForegroundColor Green
-}
-
-function Test-PortForwarding {
-    [CmdletBinding()]
-    param(
-        [hashtable]$TestResults
-    )
-    
-    $portTest = Test-PortAvailable -Port $PortForwarding.LocalPort
-    Assert-Equal -Expected $true -Actual $portTest -Message "Port $($PortForwarding.LocalPort) should be available"
-    
-    # Initialize port forwarding if enabled
-    if ($PortForwarding.Enabled) {
-        Write-Host "Initializing port forwarding..."
-        $forwardingStarted = Start-PortForwarding -LocalPort $PortForwarding.LocalPort `
-                                                   -RemoteHost $PortForwarding.RemoteHost `
-                                                   -RemotePort $PortForwarding.RemotePort
-        
-        if (-not $forwardingStarted) {
-            Write-Warning "Port forwarding failed. Falling back to direct connection."
-        } elseif (-not (Test-PortForwarding -LocalPort $PortForwarding.LocalPort)) {
-            Write-Warning "Port forwarding test failed. Falling back to direct connection."
-            Stop-PortForwarding
-        } else {
-            Write-Host "Port forwarding active on port $($PortForwarding.LocalPort)" -ForegroundColor Green
-        }
-    }
-    
-    if ($forwardingStarted) {
-        $portTest = Test-PortForwarding -LocalPort $PortForwarding.LocalPort
-        Assert-Equal -Expected $true -Actual $portTest -Message "Port forwarding should work"
-        
-        Stop-PortForwarding
-        
-        # Verify port is released
-        Start-Sleep -Seconds 1
-        $portTest = Test-PortAvailable -Port $PortForwarding.LocalPort
-        Assert-Equal -Expected $true -Actual $portTest -Message "Port should be released after stopping"
-    }
-}
-
-function Test-APIConnectivity {
-    [CmdletBinding()]
-    param(
-        [hashtable]$TestResults
-    )
-    
-    $testPrompt = @(
-        @{role='system'; content='You are a helpful assistant.'},
-        @{role='user'; content='Say "test"'}
-    )
-    
-    # Direct API test without port forwarding
-    Write-Host "`n[TEST] Running Direct API Connectivity Test..." -ForegroundColor Cyan
-    $response = Invoke-GPT -Messages $testPrompt -Max 10
-    Assert-Equal -Expected 'test' -Actual $response -Message "Direct API test failed"
-    
-    # API test with port forwarding if enabled
-    if ($PortForwarding.Enabled) {
-        Write-Host "`n[TEST] Running API Connectivity Test (with Port Forwarding)..." -ForegroundColor Cyan
-        $global:OpenAIEndpoint = "http://localhost:${PortForwarding.LocalPort}"
-        $response = Invoke-GPT -Messages $testPrompt -Max 10
-        Assert-Equal -Expected 'test' -Actual $response -Message "API test with port forwarding failed"
-    }
-}
-
-function Assert-Equal {
-    param(
-        [Parameter(Mandatory=$true)] $Expected,
-        [Parameter(Mandatory=$true)] $Actual,
-        [string]$Message = ""
-    )
-    if ($Expected -eq $Actual) {
-        Write-Host "[PASS] $Message" -ForegroundColor Green
-        return $true
-    } else {
-        Write-Host "[FAIL] $Message (Expected: $Expected, Actual: $Actual)" -ForegroundColor Red
-        return $false
-    }
-}
-
-function Test-PortAvailable {
-    param(
-        [Parameter(Mandatory=$true)][int]$Port
-    )
-    try {
-        $listener = New-Object System.Net.Sockets.TcpListener([System.Net.IPAddress]::Loopback, $Port)
-        $listener.Start()
-        $listener.Stop()
-        return $true
-    } catch {
-        return $false
-    }
-}
-
-Install-Module -Name PowerHTML -Force -AllowClobber -Scope CurrentUser
-Install-Module -Name Pester -RequiredVersion 5.3.1 -Force -AllowClobber -Scope CurrentUser -SkipPublisherCheck
+Show-ReAIMenu
