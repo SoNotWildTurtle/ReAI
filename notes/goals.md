@@ -1,0 +1,32 @@
+# Goals
+
+- [x] Implement CLI flags for starting and stopping the service.
+- [x] Provide a built-in terminal that tails the log file for persistent I/O.
+- [x] Add monitor mode that restarts the service if it stops.
+- [x] Support goal management via CLI commands.
+- [x] Auto-reopen terminal when monitoring restarts the service.
+- [x] Provide setup script to install dependencies.
+- [x] Modularize service and goal functions into separate modules.
+- [x] Split remaining logic into additional modules for easier maintenance.
+- [x] Document paths and module relationships in README and dev notes.
+- [x] Add interactive CLI menu for user-friendly control.
+- [x] Implement research summary workflow and business planning.
+- [x] Add Tor-based DuckDuckGo and Google search to research pipeline.
+- [x] Add dynamic goal analysis to generate subgoals for self-improvement.
+- [x] Introduce security module with secure mode and privilege checks.
+- [x] Add codex_setup.sh for Linux-based Codex environment.
+- [x] Add logging module for consistent log entries.
+- [x] Add closeable, cross-platform log terminal.
+- [x] Add goal processing automation via CLI.
+- [x] Expose port forwarding and self-refactor via new CLI options.
+- [x] Load OpenAI API key from OPENAI_API_KEY environment variable.
+- [x] Extend Terminal UI with research and secure mode options.
+- [x] Rate information reliability during research using new module.
+- [x] Aggregate reliability scores across sources with high/medium/low breakdown.
+- [x] Provide context identification and shortening via Google search to reduce token usage.
+- [x] Add service status query via CLI and menu.
+- [x] Detect tampering by hashing scripts and verifying with IntegrityCheck module.
+- [x] Implement text compression module for further context reduction.
+- [x] Summarize history logs to minimize future token usage.
+- [x] Automate the research and self-evolution pipeline with a single command.
+- [x] Expand research methodology with Google Scholar and arXiv sources.
