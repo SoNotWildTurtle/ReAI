@@ -15,6 +15,11 @@ function Invoke-GoalProcessing {
     Start-Process -FilePath "$PSHOME\powershell.exe" -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$scriptFile") -WindowStyle Hidden -Wait
     $reportName = ($Goal -replace '\s','_') + '.md'
     $report  = Join-Path $global:ReportsDir $reportName
+    $scriptFile = Join-Path $ScriptsDir ([guid]::NewGuid().ToString() + '.ps1')
+    Set-Content $scriptFile $code
+    Start-Process -FilePath "$PSHOME\powershell.exe" -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$scriptFile") -WindowStyle Hidden -Wait
+    $reportName = ($Goal -replace '\s','_') + '.md'
+    $report  = Join-Path $ReportsDir $reportName
     $summary = Invoke-GPT -Messages @(
         @{role='system'; content='Summarize findings and propose next steps.'},
         @{role='user';   content="$plan`n$webnotes"}

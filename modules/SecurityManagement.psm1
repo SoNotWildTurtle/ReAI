@@ -22,6 +22,7 @@ function Test-SecureNetworkAccess {
 
 function Ensure-StateProtection {
     param([string]$File = $global:StateFile)
+    param([string]$File = $StateFile)
     try {
         if (-not (Test-Path $File)) { return }
         $acl = Get-Acl $File

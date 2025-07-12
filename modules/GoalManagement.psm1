@@ -41,3 +41,9 @@ function List-ReAIGoals {
 }
 
 Export-ModuleMember -Function Add-ReAIGoal,Complete-ReAIGoal,List-ReAIGoals
+function List-ReAIGoals {
+    Write-Host 'Active Goals:' -ForegroundColor Cyan
+    foreach ($g in $State.goals) { Write-Host "- $g" }
+    Write-Host 'Completed Goals:' -ForegroundColor Cyan
+    foreach ($g in $State.completed) { Write-Host "- $g" }
+}

@@ -58,6 +58,16 @@ $global:Model        = "gpt-3.5-turbo"
 
 # Port Forwarding Configuration
 $global:PortForwarding = @{
+
+$OpenAIKey = $env:OPENAI_API_KEY
+if (-not $OpenAIKey) {
+    Write-Warning 'OPENAI_API_KEY environment variable not found. API calls will fail.'
+    $OpenAIKey = ''
+}
+$Model        = "gpt-3.5-turbo"
+
+# Port Forwarding Configuration
+$PortForwarding = @{
     Enabled = $false
     LocalPort = 8080
     RemoteHost = "api.openai.com"
@@ -76,14 +86,28 @@ $global:LogFile      = Join-Path $global:WorkDir "reai.log"
 $global:ServicePath  = "& `"$PSHOME\powershell.exe`" -NoProfile -ExecutionPolicy Bypass -File `"$global:WorkDir\$global:ScriptName`""
 try { Start-Transcript -Path $global:LogFile -Append -ErrorAction Stop } catch {}
 
-
 foreach ($dir in @($global:ModulesDir, $global:ScriptsDir, $global:ReportsDir)) {
+
+$WorkDir      = $PSScriptRoot
+$StateFile    = Join-Path $WorkDir "state.json"
+$ModulesDir   = Join-Path $WorkDir "modules"
+$ScriptsDir   = Join-Path $WorkDir "scripts"
+$ReportsDir   = Join-Path $WorkDir "reports"
+$ScriptName   = Split-Path -Leaf $PSCommandPath
+$ServiceName  = "MINC_ResearchAI"
+$LogFile     = Join-Path $WorkDir "reai.log"
+$ServicePath  = "& `"$PSHOME\powershell.exe`" -NoProfile -ExecutionPolicy Bypass -File `"$WorkDir\$ScriptName`""
+try { Start-Transcript -Path $LogFile -Append -ErrorAction Stop } catch {}
+
+
+foreach ($dir in @($ModulesDir, $ScriptsDir, $ReportsDir)) {
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
 }
 
 # Load any local modules for extended functionality
 function Import-AllModules {
     $mods = Get-ChildItem -Path $global:ModulesDir -Filter '*.psm1'
+    $mods = Get-ChildItem -Path $ModulesDir -Filter '*.psm1'
     $logging = $mods | Where-Object { $_.Name -eq 'Logging.psm1' }
     if ($logging) {
         Import-Module $logging.FullName -Force
@@ -102,6 +126,7 @@ function Import-AllModules {
 
 Import-AllModules
 if (Test-Path (Join-Path $global:ModulesDir 'IntegrityCheck.psm1')) {
+if (Test-Path (Join-Path $ModulesDir 'IntegrityCheck.psm1')) {
     try { Test-Integrity | Out-Null } catch {}
 }
 Write-ReAILog -Message "ReAI launched with parameters: $($PSBoundParameters.Keys -join ', ')" -Level 'INFO'
@@ -128,6 +153,11 @@ if (Test-Path $global:StateFile) {
     $global:State = [PSCustomObject]$global:State
 } else {
     $global:State = [PSCustomObject]@{
+if (Test-Path $StateFile) {
+    $State = Get-Content $StateFile | ConvertFrom-Json
+    $State = [PSCustomObject]$State
+} else {
+    $State = [PSCustomObject]@{
         goals      = @("Research quantum mind-uploading", "Draft business platform proposal", "Virtualization of human brain based on next gen research using any methods", "Become a superior research-intelligence with a 'do no harm' mentality")
         completed  = @()
         iterations = 0
@@ -138,6 +168,7 @@ Ensure-StateProtection
 
 try { Import-Module PowerHTML -ErrorAction Stop }
 catch { Write-Warning 'PowerHTML module not found. Some features may be unavailable.' }
+Import-Module PowerHTML -ErrorAction Stop
 
 
 # === CLI Entry Points ===
@@ -178,6 +209,7 @@ if ($RunTests -or $TestAll -or $TestPortForwarding -or $TestAPI -or $TestStateMa
     if ($TestStateManagement) { $params.TestStateManagement = $true }
     if (-not $params) { $params.RunAll = $true }
     Import-Module (Join-Path $global:ModulesDir 'TestSuite.psm1') -Force
+    Import-Module (Join-Path $ModulesDir 'TestSuite.psm1') -Force
     Invoke-TestSuite @params
     return
 }
@@ -187,3 +219,4 @@ if (-not $PSBoundParameters.Count) {
     Prompt-EnvVariables
     Show-ReAIMenu
 }
+Show-ReAIMenu

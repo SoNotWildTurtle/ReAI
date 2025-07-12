@@ -5,3 +5,5 @@ function Save-State {
 }
 
 Export-ModuleMember -Function Save-State
+    $State | ConvertTo-Json -Depth 5 | Set-Content $StateFile
+}

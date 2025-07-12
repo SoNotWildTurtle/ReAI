@@ -37,3 +37,4 @@
 - [x] Provide interactive chatbot access via CLI and menu.
 - [x] Replace GPT-powered chatbot with locally trained Markov chain model.
 - [x] Compress and encrypt research reports and log files for defense.
+- [x] Start research, research paper creation (analyze and contextualize research) on Virtualizing the human brain for Sword Art Online gaming after death, and begin work on business proposals.

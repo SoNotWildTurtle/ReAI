@@ -50,6 +50,12 @@ function Invoke-Research {
     Protect-File -Path $reportPath | Out-Null
     Protect-File -Path $articlePath | Out-Null
     Protect-File -Path $planPath | Out-Null
+    $reportPath = Join-Path $ReportsDir "${base}_lab_report.md"
+    $articlePath = Join-Path $ReportsDir "${base}_article.md"
+    $planPath = Join-Path $ReportsDir "${base}_biz_plan.md"
+    Set-Content $reportPath $labReport
+    Set-Content $articlePath $article
+    Set-Content $planPath $bizPlan
     Write-Host "Saved report to $reportPath" -ForegroundColor Green
     Write-Host "Saved article to $articlePath" -ForegroundColor Green
     Write-Host "Saved business plan to $planPath" -ForegroundColor Green

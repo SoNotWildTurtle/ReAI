@@ -9,7 +9,6 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 4. Optionally set `REAI_ENC_KEY` with a Base64 AES key for file encryption, otherwise a key is generated on first use.
 5. Execute `./ReAI.ps1 -InstallService` to install the Windows service.
    The service starts `ReAI.ps1` with no arguments so the interactive menu appears in its terminal window.
-
 ## Runtime Controls
 - `-StartService` / `-StopService` – manage the background service
 - `-ServiceStatus` – show current service status
@@ -42,6 +41,9 @@ Running `./ReAI.ps1` with no parameters launches an interactive text menu. The m
 From the menu you can manage the service, handle goals, perform research, control network features and run maintenance commands.
 You can also chat with Reah in a loop that learns from previous conversations to produce increasingly unique replies.
 
+Running `./ReAI.ps1` with no parameters launches an interactive text menu for these actions.
+The menu also lets you check service status, trigger research reports, obtain context summaries, compress text, summarize history, and toggle secure mode interactively.
+
 During research, each information source is rated for reliability using GPT to help prioritize trustworthy data. The research summary includes an average reliability score and a breakdown of high, medium and low rated sources.
 
 All state is stored in `state.json` in the project directory.
@@ -58,6 +60,7 @@ Set the `OPENAI_API_KEY` environment variable so modules can authenticate with O
 - `notes/` – development notes, goals list and private notes.
 - `data/` – text corpus used to train the local Reah chatbot model.
 
+
 ## Modules
 Each module lives under `modules/` and is imported by the main script.
 
@@ -72,6 +75,7 @@ Each module lives under `modules/` and is imported by the main script.
 | `SelfRefactor.psm1` | Prototype self-refactoring routine. | `ReAI` when `-SelfRefactor` is used or from menu | `Invoke-GPT` |
 | `TestSuite.psm1` | Collection of Pester-like tests and dependency checks. | `ReAI` when `-RunTests` is specified | functions from other modules |
 | `TerminalUI.psm1` | Displays the Reah-branded interactive menu grouped by service, goal, research, network and maintenance tasks. Each entry includes a short description. | `ReAI` | menu invokes various module functions |
+| `TerminalUI.psm1` | Presents interactive CLI menu when no arguments are passed, including port forwarding, secure mode toggles, history summaries and research commands. | `ReAI` | menu invokes various module functions |
 | `ResearchSummary.psm1` | Generate lab reports, creative articles and business plans from a topic and compute overall reliability metrics using search results from multiple engines including Google Scholar and arXiv. | `ReAI` when `-ResearchTopic` is used | `Invoke-GPT`, `Search-Web`, `Get-UrlSummary`, `Update-ScriptCode` |
 | `GoalAnalysis.psm1` | Analyze current goals and generate subgoals for self-improvement. | `ReAI` when `-AnalyzeGoals` is used or from menu | `Invoke-GPT`, `Add-ReAIGoal` |
 | `SecurityManagement.psm1` | Provides secure mode, state file protection and admin checks. | imported by `ReAI` | Windows security APIs |
