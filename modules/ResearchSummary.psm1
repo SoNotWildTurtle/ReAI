@@ -41,6 +41,15 @@ function Invoke-Research {
         @{role='user'; content=$labReport}
     ) -Max 1000
     $base = $Topic -replace '\s','_'
+    $reportPath = Join-Path $global:ReportsDir "${base}_lab_report.md"
+    $articlePath = Join-Path $global:ReportsDir "${base}_article.md"
+    $planPath = Join-Path $global:ReportsDir "${base}_biz_plan.md"
+    Set-Content $reportPath $labReport
+    Set-Content $articlePath $article
+    Set-Content $planPath $bizPlan
+    Protect-File -Path $reportPath | Out-Null
+    Protect-File -Path $articlePath | Out-Null
+    Protect-File -Path $planPath | Out-Null
     $reportPath = Join-Path $ReportsDir "${base}_lab_report.md"
     $articlePath = Join-Path $ReportsDir "${base}_article.md"
     $planPath = Join-Path $ReportsDir "${base}_biz_plan.md"

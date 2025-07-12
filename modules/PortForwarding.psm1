@@ -90,3 +90,5 @@ function Test-PortAvailable {
         $listener.Start(); $listener.Stop(); return $true
     } catch { return $false }
 }
+
+Export-ModuleMember -Function Start-PortForwarding,Stop-PortForwarding,Check-PortForwarding,Test-PortAvailable

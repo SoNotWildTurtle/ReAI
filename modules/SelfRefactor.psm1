@@ -24,3 +24,5 @@ function Update-ScriptCode {
         return $false
     }
 }
+
+Export-ModuleMember -Function Update-ScriptCode

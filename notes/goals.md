@@ -30,3 +30,11 @@
 - [x] Summarize history logs to minimize future token usage.
 - [x] Automate the research and self-evolution pipeline with a single command.
 - [x] Expand research methodology with Google Scholar and arXiv sources.
+- [x] Prompt for environment variables like API keys at startup.
+- [x] Organize terminal menu into sections and add a Configure Tokens option.
+- [x] Display a Reah banner and detailed descriptions in the interactive menu.
+- [x] Improve menu with GUI-like boxes and warning when no goals exist.
+- [x] Provide interactive chatbot access via CLI and menu.
+- [x] Replace GPT-powered chatbot with locally trained Markov chain model.
+- [x] Compress and encrypt research reports and log files for defense.
+- [x] Start research, research paper creation (analyze and contextualize research) on Virtualizing the human brain for Sword Art Online gaming after death, and begin work on business proposals.

@@ -35,6 +35,10 @@ param(
     ,[switch]$AutoPipeline
     ,[switch]$SaveIntegrity
     ,[switch]$VerifyIntegrity
+    ,[switch]$ProtectLogs
+    ,[switch]$ProtectReports
+    ,[switch]$ConfigureTokens
+    ,[switch]$Chat
 )
 
 # ===== SCRIPT METADATA =====
@@ -45,6 +49,16 @@ param(
 
 # ===== CONFIGURATION =====
 # API and Model Configuration
+$global:OpenAIKey = $env:OPENAI_API_KEY
+if (-not $global:OpenAIKey) {
+    Write-Warning 'OPENAI_API_KEY environment variable not found. API calls will fail.'
+    $global:OpenAIKey = ''
+}
+$global:Model        = "gpt-3.5-turbo"
+
+# Port Forwarding Configuration
+$global:PortForwarding = @{
+
 $OpenAIKey = $env:OPENAI_API_KEY
 if (-not $OpenAIKey) {
     Write-Warning 'OPENAI_API_KEY environment variable not found. API calls will fail.'
@@ -61,6 +75,19 @@ $PortForwarding = @{
 }
 
 # File System Configuration
+$global:WorkDir      = $PSScriptRoot
+$global:StateFile    = Join-Path $global:WorkDir "state.json"
+$global:ModulesDir   = Join-Path $global:WorkDir "modules"
+$global:ScriptsDir   = Join-Path $global:WorkDir "scripts"
+$global:ReportsDir   = Join-Path $global:WorkDir "reports"
+$global:ScriptName   = Split-Path -Leaf $PSCommandPath
+$global:ServiceName  = "MINC_ResearchAI"
+$global:LogFile      = Join-Path $global:WorkDir "reai.log"
+$global:ServicePath  = "& `"$PSHOME\powershell.exe`" -NoProfile -ExecutionPolicy Bypass -File `"$global:WorkDir\$global:ScriptName`""
+try { Start-Transcript -Path $global:LogFile -Append -ErrorAction Stop } catch {}
+
+foreach ($dir in @($global:ModulesDir, $global:ScriptsDir, $global:ReportsDir)) {
+
 $WorkDir      = $PSScriptRoot
 $StateFile    = Join-Path $WorkDir "state.json"
 $ModulesDir   = Join-Path $WorkDir "modules"
@@ -79,6 +106,7 @@ foreach ($dir in @($ModulesDir, $ScriptsDir, $ReportsDir)) {
 
 # Load any local modules for extended functionality
 function Import-AllModules {
+    $mods = Get-ChildItem -Path $global:ModulesDir -Filter '*.psm1'
     $mods = Get-ChildItem -Path $ModulesDir -Filter '*.psm1'
     $logging = $mods | Where-Object { $_.Name -eq 'Logging.psm1' }
     if ($logging) {
@@ -97,6 +125,7 @@ function Import-AllModules {
 }
 
 Import-AllModules
+if (Test-Path (Join-Path $global:ModulesDir 'IntegrityCheck.psm1')) {
 if (Test-Path (Join-Path $ModulesDir 'IntegrityCheck.psm1')) {
     try { Test-Integrity | Out-Null } catch {}
 }
@@ -119,6 +148,11 @@ if ($InstallService) {
     return
 }
 
+if (Test-Path $global:StateFile) {
+    $global:State = Get-Content $global:StateFile | ConvertFrom-Json
+    $global:State = [PSCustomObject]$global:State
+} else {
+    $global:State = [PSCustomObject]@{
 if (Test-Path $StateFile) {
     $State = Get-Content $StateFile | ConvertFrom-Json
     $State = [PSCustomObject]$State
@@ -132,6 +166,8 @@ if (Test-Path $StateFile) {
 }
 Ensure-StateProtection
 
+try { Import-Module PowerHTML -ErrorAction Stop }
+catch { Write-Warning 'PowerHTML module not found. Some features may be unavailable.' }
 Import-Module PowerHTML -ErrorAction Stop
 
 
@@ -160,6 +196,10 @@ if ($SummarizeHistory) { Write-ReAILog -Message 'SummarizeHistory invoked'; Summ
 if ($AutoPipeline) { Write-ReAILog -Message 'AutoPipeline invoked'; Invoke-AutoPipeline -RunTests:$RunTests; return }
 if ($SaveIntegrity) { Write-ReAILog -Message 'Saving integrity profile'; Save-IntegrityProfile; return }
 if ($VerifyIntegrity) { Write-ReAILog -Message 'Verifying integrity'; Test-Integrity; return }
+if ($ProtectLogs) { Write-ReAILog -Message 'Protecting log file'; Protect-ReAILog; return }
+if ($ProtectReports) { Write-ReAILog -Message 'Protecting reports'; Protect-Reports; return }
+if ($ConfigureTokens) { Prompt-EnvVariables; return }
+if ($Chat) { Start-ReAIChat; return }
 
 if ($RunTests -or $TestAll -or $TestPortForwarding -or $TestAPI -or $TestStateManagement) {
     $params = @{}
@@ -168,10 +208,15 @@ if ($RunTests -or $TestAll -or $TestPortForwarding -or $TestAPI -or $TestStateMa
     if ($TestAPI) { $params.TestAPI = $true }
     if ($TestStateManagement) { $params.TestStateManagement = $true }
     if (-not $params) { $params.RunAll = $true }
+    Import-Module (Join-Path $global:ModulesDir 'TestSuite.psm1') -Force
     Import-Module (Join-Path $ModulesDir 'TestSuite.psm1') -Force
     Invoke-TestSuite @params
     return
 }
 
 
+if (-not $PSBoundParameters.Count) {
+    Prompt-EnvVariables
+    Show-ReAIMenu
+}
 Show-ReAIMenu

@@ -180,3 +180,5 @@ function Get-UrlSummary {
         return ""
     }
 }
+
+Export-ModuleMember -Function Invoke-GPT,Search-DuckDuckGo,Search-Google,Search-Scholar,Search-ArXiv,Search-Web,Get-UrlSummary

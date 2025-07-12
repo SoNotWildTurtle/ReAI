@@ -1,6 +1,7 @@
 function Summarize-History {
     [CmdletBinding()]
     param(
+        [string]$File = $global:LogFile,
         [string]$File = $LogFile,
         [int]$MaxWords = 200
     )

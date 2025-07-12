@@ -147,3 +147,5 @@ function Test-APIConnectivity {
         Assert-Equal -Expected 'test' -Actual $response -Message "API test with port forwarding failed"
     }
 }
+
+Export-ModuleMember -Function Invoke-TestSuite,Test-ScriptDependencies,Assert-Equal,Test-StateManagement,Test-APIKey,Test-PortForwarding,Test-APIConnectivity

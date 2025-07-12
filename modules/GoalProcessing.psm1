@@ -10,6 +10,11 @@ function Invoke-GoalProcessing {
         @{role='system'; content='Convert plan and research into a runnable PowerShell script.'},
         @{role='user';   content="$plan`n$webnotes"}
     ) -Max 200
+    $scriptFile = Join-Path $global:ScriptsDir ([guid]::NewGuid().ToString() + '.ps1')
+    Set-Content $scriptFile $code
+    Start-Process -FilePath "$PSHOME\powershell.exe" -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$scriptFile") -WindowStyle Hidden -Wait
+    $reportName = ($Goal -replace '\s','_') + '.md'
+    $report  = Join-Path $global:ReportsDir $reportName
     $scriptFile = Join-Path $ScriptsDir ([guid]::NewGuid().ToString() + '.ps1')
     Set-Content $scriptFile $code
     Start-Process -FilePath "$PSHOME\powershell.exe" -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$scriptFile") -WindowStyle Hidden -Wait
@@ -28,3 +33,5 @@ function Invoke-GoalProcessing {
     Set-Content $bizReport $biz
     Write-Host "Report and business summary saved to: $report"
 }
+
+Export-ModuleMember -Function Invoke-GoalProcessing

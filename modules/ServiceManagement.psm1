@@ -23,6 +23,11 @@ function Open-ReAITerminal {
         Write-Host 'ReAI terminal already open.'
         return $global:ReAITerminal
     }
+    $path = $LogFile
+    if (-not $path) { $path = $global:LogFile }
+    if (-not (Test-Path $path)) { New-Item -ItemType File -Path $path | Out-Null }
+    $exe = if (Test-Path (Join-Path $PSHOME 'pwsh')) { Join-Path $PSHOME 'pwsh' } else { Join-Path $PSHOME 'powershell.exe' }
+    $proc = Start-Process -FilePath $exe -ArgumentList '-NoExit','-Command', "Get-Content -Path \"$path\" -Wait" -WindowStyle Normal -PassThru
     if (-not (Test-Path $LogFile)) { New-Item -ItemType File -Path $LogFile | Out-Null }
     $exe = if (Test-Path (Join-Path $PSHOME 'pwsh')) { Join-Path $PSHOME 'pwsh' } else { Join-Path $PSHOME 'powershell.exe' }
     $proc = Start-Process -FilePath $exe -ArgumentList '-NoExit','-Command', "Get-Content -Path \"$LogFile\" -Wait" -WindowStyle Normal -PassThru

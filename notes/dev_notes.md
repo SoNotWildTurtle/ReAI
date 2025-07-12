@@ -9,6 +9,7 @@ All persistent state is stored in `state.json` at the project root.
 - `scripts/` – helper scripts such as `setup.ps1` and any generated scripts.
 - `reports/` – markdown reports produced by goal processing.
 - `notes/` – this folder (development notes, goals and private notes).
+- `data/` – corpus text used to train Reah's local language model.
 
 ## File Relationships
 - **ReAI.ps1** imports every `.psm1` under `modules/` via `Import-AllModules`. CLI switches invoke module functions.
@@ -23,12 +24,16 @@ All persistent state is stored in `state.json` at the project root.
 - **modules/TerminalUI.psm1** – interactive text menu displayed when `ReAI.ps1` is run without parameters.
   Added close-terminal option and cross-platform PowerShell detection for the terminal window.
   Menu now exposes research topic reports and secure mode toggles.
+  Warning and info messages are displayed in ASCII boxes for better feedback.
+  When no goals exist a yellow "No current goals" box appears at menu launch.
 - **modules/ResearchSummary.psm1** – generates lab reports, creative articles and business plans from a topic using API utilities and self-refactor. It aggregates reliability ratings to produce an overall score summary. Invoked with the `-ResearchTopic` CLI switch.
 - **modules/GoalAnalysis.psm1** – analyzes current goals and adds new subgoals to improve ReAI. Used when `-AnalyzeGoals` is specified or from the menu.
 - **modules/SecurityManagement.psm1** – enables secure mode, protects the state file and checks admin privileges.
 - **modules/Logging.psm1** – provides `Write-ReAILog` for standardized log output to `reai.log`.
 - **modules/ContextShortening.psm1** – extracts keywords, summarizes Google search results and condenses context to reduce token usage.
 - **modules/ContextCompression.psm1** – compresses arbitrary text or conversations into short summaries for token savings.
+- **modules/ReahModel.psm1** – maintains a Markov chain built from corpus text and past chats.
+- **modules/Chatbot.psm1** – uses the local Reah model for conversation without external GPT calls and is invoked via the `-Chat` flag and menu.
 - **scripts/setup.ps1** – installs required PowerShell modules (PowerHTML, Pester) and prepares runtime directories.
 - **scripts/codex_setup.sh** – installs PowerShell and then runs `setup.ps1` for Codex/Linux environments.
 - **notes/goals.md** – list of project goals with completion checkboxes.
@@ -36,6 +41,7 @@ All persistent state is stored in `state.json` at the project root.
 - The main script now reads the OpenAI key from the `OPENAI_API_KEY` environment variable and warns if it is missing.
 \n- Research pipeline now pulls results from Tor-based DuckDuckGo search and Google search for broader coverage.
 - Service monitor now reopens the terminal after restarting the service to maintain persistent I/O.
+- The Windows service launches `ReAI.ps1` without parameters so the interactive menu appears in the service terminal for user commands.
 - New security module adds secure mode to block network access and protects the state file with ACLs.
 - New logging module standardizes log output across commands.
 - Goal processing module now callable via -ProcessGoal or -ProcessAllGoals.
@@ -52,3 +58,7 @@ All persistent state is stored in `state.json` at the project root.
 - HistorySummary module summarizes reai.log to trim old conversation for minimal token use. Accessible via -SummarizeHistory and a menu entry.
 - PipelineAutomation module runs goal analysis, goal processing, self-refactor and history summarization in one command via -AutoPipeline.
 - Research pipeline extended with Google Scholar and arXiv sources for deeper academic coverage.
+- EnvironmentSetup module prompts for required environment variables like OPENAI_API_KEY when missing.
+- Terminal menu reorganized into categories and includes an option to configure tokens.
+- Menu now displays a "Reah" banner and describes each command under Service, Goal, Research, Network and Maintenance sections.
+- FileProtection module compresses and encrypts logs and reports. Invoked automatically by ResearchSummary and via -ProtectLogs/-ProtectReports.
