@@ -65,9 +65,9 @@ $global:Model        = "gpt-3.5-turbo"
 
 # Port Forwarding Configuration
 $global:PortForwarding = @{
-    Enabled = $false
-    LocalPort = 8080
-    RemoteHost = "api.openai.com"
+    Enabled    = $false;
+    LocalPort  = 8080;
+    RemoteHost = "api.openai.com";
     RemotePort = 443
 }
 
@@ -134,15 +134,17 @@ if ($InstallService) {
 }
 
 if (Test-Path $global:StateFile) {
-    $global:State = Get-Content $global:StateFile | ConvertFrom-Json
-    $global:State = [PSCustomObject]$global:State
-    if (-not $global:State.PSObject.Properties.Name -contains 'inProgress') {
-        $global:State | Add-Member -Name inProgress -Value @() -MemberType NoteProperty
+    try {
+        $json = Get-Content $global:StateFile -Raw
+        $global:State = $json | ConvertFrom-Json
+        $global:State = [PSCustomObject]$global:State
+    } catch {
+        Write-Warning "Failed to parse state file. Starting with defaults."
+        $global:State = $null
     }
-    if (-not $global:State.PSObject.Properties.Name -contains 'secure') {
-        $global:State | Add-Member -Name secure -Value $false -MemberType NoteProperty
-    }
-} else {
+}
+
+if (-not $global:State) {
     $global:State = [PSCustomObject]@{
         goals      = @("Research quantum mind-uploading", "Draft business platform proposal", "Virtualization of human brain based on next gen research using any methods", "Become a superior research-intelligence with a 'do no harm' mentality")
         inProgress = @()
@@ -151,6 +153,13 @@ if (Test-Path $global:StateFile) {
         versions   = @()
         secure     = $false
     }
+}
+
+if (-not $global:State.PSObject.Properties.Name -contains 'inProgress') {
+    $global:State | Add-Member -Name inProgress -Value @() -MemberType NoteProperty
+}
+if (-not $global:State.PSObject.Properties.Name -contains 'secure') {
+    $global:State | Add-Member -Name secure -Value $false -MemberType NoteProperty
 }
 Ensure-StateProtection
 
