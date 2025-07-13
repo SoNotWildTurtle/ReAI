@@ -111,7 +111,7 @@ Each module lives under `modules/` and is imported by the main script.
 | `GoalManagement.psm1` | Manage goals with add, start, pause, complete, remove and list commands. | `ReAI` CLI | `Save-State` from `StateManagement.psm1` |
 | `ServiceManagement.psm1` | Start/stop/restart the Windows service (Windows only), check status and manage a log-tail terminal with cross-platform detection. | `ReAI` CLI | Windows `Start-Service`, `Stop-Service`, `Get-Service` |
 | `StateManagement.psm1` | Persist `$State` object to disk. | `GoalManagement.psm1`, others | none |
-| `OpenAIUtils.psm1` | OpenAI helpers with DuckDuckGo (Tor), Google, Google Scholar and arXiv search plus request throttling via `Set-GPTRateLimit`. | `GoalProcessing.psm1`, `SelfRefactor.psm1`, `ResearchSummary.psm1`, tests | `Invoke-RestMethod`, `curl`, `ConvertFrom-Html` |
+| `OpenAIUtils.psm1` | OpenAI helpers with DuckDuckGo (Tor), Google, Google Scholar and arXiv search plus request throttling via `Set-GPTRateLimit`. Uses `Invoke-RestMethod` and falls back to `curl.exe` when Tor proxies are requested. | `GoalProcessing.psm1`, `SelfRefactor.psm1`, `ResearchSummary.psm1`, tests | `Invoke-RestMethod`, `curl.exe`, `ConvertFrom-Html` |
 | `GoalProcessing.psm1` | Generates research scripts and reports for a goal. | `ReAI` when `-ProcessGoal` or `-ProcessAllGoals` is used | `Invoke-GPT`, `Search-Web`, `Get-UrlSummary` |
 | `PortForwarding.psm1` | Local port forwarding helpers to proxy OpenAI API. | `ReAI` CLI (`-StartForwarding`, `-StopForwarding`), tests | .NET TCP classes |
 | `SelfRefactor.psm1` | Prototype self-refactoring routine. | `ReAI` when `-SelfRefactor` is used or from menu | `Invoke-GPT` |

@@ -95,7 +95,12 @@ function Search-DuckDuckGo {
     try {
         $uri = "https://html.duckduckgo.com/html?q=$([uri]::EscapeDataString($Query))"
         if ($Tor) {
-            $html = & curl -s -x socks5h://127.0.0.1:9050 $uri
+            if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+                $html = & curl.exe -s -x socks5h://127.0.0.1:9050 $uri
+            } else {
+                Write-Warning 'curl not found; falling back to Invoke-RestMethod without Tor.'
+                $html = Invoke-RestMethod -Uri $uri -ErrorAction Stop
+            }
         } else {
             $html = Invoke-RestMethod -Uri $uri -ErrorAction Stop
         }
@@ -118,7 +123,12 @@ function Search-Google {
         $uri = "https://www.google.com/search?q=$([uri]::EscapeDataString($Query))&num=5"
         $headers = @{ 'User-Agent' = 'Mozilla/5.0' }
         if ($Tor) {
-            $html = & curl -s -x socks5h://127.0.0.1:9050 -A "Mozilla/5.0" $uri
+            if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+                $html = & curl.exe -s -x socks5h://127.0.0.1:9050 -A "Mozilla/5.0" $uri
+            } else {
+                Write-Warning 'curl not found; using Invoke-RestMethod without Tor.'
+                $html = Invoke-RestMethod -Uri $uri -Headers $headers -ErrorAction Stop
+            }
         } else {
             $html = Invoke-RestMethod -Uri $uri -Headers $headers -ErrorAction Stop
         }

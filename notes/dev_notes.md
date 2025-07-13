@@ -17,7 +17,7 @@ All persistent state is stored in `state.json` at the project root.
 - **modules/GoalManagement.psm1** - goal tracking commands (add, complete, remove, list) that modify `$State` and call `Save-State` from `StateManagement.psm1`.
  - **modules/ServiceManagement.psm1** – service start/stop helpers, status query and monitoring terminal. The monitor function restarts the service if it stops and automatically reopens the terminal. Used by `ReAI.ps1` when the related CLI options are specified.
 - **modules/StateManagement.psm1** – provides `Save-State` for persisting the global state object.
- - **modules/OpenAIUtils.psm1** – OpenAI helpers plus DuckDuckGo (Tor), Google, Google Scholar and arXiv search utilities used by multiple modules.
+ - **modules/OpenAIUtils.psm1** – OpenAI helpers plus DuckDuckGo (Tor), Google, Google Scholar and arXiv search utilities used by multiple modules. When Tor mode is requested the module now tries `curl.exe` first and falls back to `Invoke-RestMethod` if unavailable.
 - **modules/GoalProcessing.psm1** – creates research plans and scripts using the API utilities. Invoked from the CLI with `-ProcessGoal` or `-ProcessAllGoals`.
  - **modules/PortForwarding.psm1** – TCP port forwarding for optional API proxying; now started and stopped via CLI.
  - **modules/SelfRefactor.psm1** – prototype routine that asks GPT to rewrite the script and saves new versions; callable from the CLI and menu.
