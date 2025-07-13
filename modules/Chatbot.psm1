@@ -1,4 +1,7 @@
-$script:ChatLogsDir = Join-Path $PSScriptRoot '../chat_logs'
+$script:ChatLogsDir = $global:ChatLogsDir
+if (-not $script:ChatLogsDir) {
+    $script:ChatLogsDir = Join-Path $PSScriptRoot '../chat_logs'
+}
 if (-not (Test-Path $script:ChatLogsDir)) {
     New-Item -ItemType Directory -Path $script:ChatLogsDir | Out-Null
 }

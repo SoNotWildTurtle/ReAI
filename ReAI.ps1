@@ -73,6 +73,7 @@ $global:PortForwarding = @{
 
 # File System Configuration
 $global:WorkDir      = $PSScriptRoot
+$null = Set-Location $global:WorkDir
 $global:StateFile    = Join-Path $global:WorkDir "state.json"
 $global:ModulesDir   = Join-Path $global:WorkDir "modules"
 $global:ScriptsDir   = Join-Path $global:WorkDir "scripts"
@@ -81,7 +82,8 @@ $global:ChatLogsDir  = Join-Path $global:WorkDir "chat_logs"
 $global:ScriptName   = Split-Path -Leaf $PSCommandPath
 $global:ServiceName  = "MINC_ResearchAI"
 $global:LogFile      = Join-Path $global:WorkDir "reai.log"
-$global:ServicePath  = "& `"$PSHOME\powershell.exe`" -NoProfile -ExecutionPolicy Bypass -File `"$global:WorkDir\$global:ScriptName`""
+$exe = if (Test-Path (Join-Path $PSHOME 'pwsh')) { Join-Path $PSHOME 'pwsh' } else { Join-Path $PSHOME 'powershell.exe' }
+$global:ServicePath = "`"$exe`" -NoProfile -ExecutionPolicy Bypass -File `"$global:WorkDir\$global:ScriptName`""
 try { Start-Transcript -Path $global:LogFile -Append -ErrorAction Stop } catch {}
 
 

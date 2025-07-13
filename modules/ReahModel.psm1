@@ -1,5 +1,8 @@
 $global:ReahModel = @{}
-$global:ReahCorpusPath = Join-Path $PSScriptRoot '../data/reah_corpus.txt'
+$global:ReahCorpusPath = if ($global:ReahCorpusPath) { $global:ReahCorpusPath } else { Join-Path $PSScriptRoot '../data/reah_corpus.txt' }
+$dir = Split-Path $global:ReahCorpusPath -Parent
+if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
+if (-not (Test-Path $global:ReahCorpusPath)) { New-Item -ItemType File -Path $global:ReahCorpusPath | Out-Null }
 
 function Train-ReahModel {
     [CmdletBinding()]
