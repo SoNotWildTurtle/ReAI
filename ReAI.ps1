@@ -37,7 +37,8 @@ param(
     ,[string]$ContextSummary
     ,[string]$CompressText
     ,[switch]$SummarizeHistory
-    ,[switch]$AutoPipeline
+    ,[switch]$AutoPipeline,
+    [switch]$WinPipeline
     ,[switch]$SaveIntegrity
     ,[switch]$VerifyIntegrity
     ,[switch]$ProtectLogs
@@ -213,6 +214,12 @@ if ($AutoPipeline) {
     return
 }
 if ($SaveIntegrity) { Write-ReAILog -Message 'Saving integrity profile'; Save-IntegrityProfile; return }
+if ($WinPipeline) {
+    Write-ReAILog -Message 'WinPipeline invoked'
+    $protect = $ProtectLogs -or $ProtectReports
+    Invoke-WindowsPipeline -ProtectFiles:$protect -VerifyIntegrity:$VerifyIntegrity
+    return
+}
 if ($VerifyIntegrity) { Write-ReAILog -Message 'Verifying integrity'; Test-Integrity; return }
 if ($ProtectLogs) { Write-ReAILog -Message 'Protecting log file'; Protect-ReAILog; return }
 if ($ProtectReports) { Write-ReAILog -Message 'Protecting reports'; Protect-Reports; return }

@@ -4,12 +4,13 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 
 ## Setup
 1. Run `scripts/install_and_start.ps1` to install dependencies, configure tokens, install the service and open the terminal automatically.
-2. Alternatively on Codex or other Linux environments run `scripts/codex_setup.sh` to install PowerShell and project dependencies.
-3. On Windows you may run `scripts/setup.ps1` directly to install required PowerShell modules and create runtime directories.
-4. Set an `OPENAI_API_KEY` environment variable with your OpenAI key or run `./ReAI.ps1 -ConfigureTokens` to enter it interactively.
-5. Optionally set `REAI_ENC_KEY` with a Base64 AES key for file encryption. If not set, the first run generates a key, saves it to `enc_key.txt`, and sets the environment variable automatically.
-6. Optionally set `OPENAI_MAX_RPM` to your OpenAI account's request-per-minute limit. The script waits `240 / OPENAI_MAX_RPM` seconds between calls (or 60 seconds for `gpt-4o`). You can override the interval directly using `OPENAI_RATE_LIMIT`.
-7. Execute `./ReAI.ps1 -InstallService` to install the Windows service (Windows only).
+2. Use `scripts/windows_pipeline.ps1` to run the integrated Windows pipeline after setup.
+3. Alternatively on Codex or other Linux environments run `scripts/codex_setup.sh` to install PowerShell and project dependencies.
+4. On Windows you may run `scripts/setup.ps1` directly to install required PowerShell modules and create runtime directories.
+5. Set an `OPENAI_API_KEY` environment variable with your OpenAI key or run `./ReAI.ps1 -ConfigureTokens` to enter it interactively.
+6. Optionally set `REAI_ENC_KEY` with a Base64 AES key for file encryption. If not set, the first run generates a key, saves it to `enc_key.txt`, and sets the environment variable automatically.
+7. Optionally set `OPENAI_MAX_RPM` to your OpenAI account's request-per-minute limit. The script waits `240 / OPENAI_MAX_RPM` seconds between calls (or 60 seconds for `gpt-4o`). You can override the interval directly using `OPENAI_RATE_LIMIT`.
+8. Execute `./ReAI.ps1 -InstallService` to install the Windows service (Windows only).
    The service starts `ReAI.ps1` with no arguments so the interactive menu appears in its terminal window. On non-Windows systems use the script directly instead of the service.
 
 ## Runtime Controls
@@ -37,6 +38,7 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 - `-CompressText "text"` – compress a block of text into a short summary
 - `-SummarizeHistory` – compress the log file into a short history summary
 - `-AutoPipeline` – run goal analysis, process all goals, self-refactor and summarize history automatically. Combine with `-VerifyIntegrity` to check hashes and `-ProtectLogs`/`-ProtectReports` to secure output files.
+- `-WinPipeline` – run the automated pipeline with Windows service integration
 - `-RunTests` with optional `-TestAll`, `-TestPortForwarding`, `-TestAPI`, `-TestStateManagement` – execute Pester-based tests
 - `-SaveIntegrity` – record current script hashes to `integrity.json`
 - `-VerifyIntegrity` – check script hashes to detect tampering
@@ -68,6 +70,7 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 | `-CompressText` | Summarize provided text to reduce tokens |
 | `-SummarizeHistory` | Compress the log file into a short history summary |
 | `-AutoPipeline` | Analyze goals, process them, refactor and summarize in one step |
+| `-WinPipeline` | Run the automated pipeline with Windows service integration |
 | `-RunTests` | Execute the automated test suite |
 | `-SaveIntegrity` / `-VerifyIntegrity` | Manage SHA256 integrity profiles |
 | `-ProtectLogs` / `-ProtectReports` | Compress and encrypt output files |
@@ -93,7 +96,7 @@ Set the `OPENAI_API_KEY` environment variable so modules can authenticate with O
 ## Directory Layout
 - `ReAI.ps1` – main entry script. Loads all modules from `modules/` and exposes CLI commands. Called directly or by the Windows service. It invokes functions from the modules depending on CLI options or launches the menu by default.
 - `modules/` – PowerShell modules containing most functionality. Each module is imported by `ReAI` using `Import-AllModules`.
-- `scripts/` – helper utilities such as `setup.ps1` for Windows, `codex_setup.sh` for Linux, and `install_and_start.ps1` for one-step installation.
+- `scripts/` – helper utilities such as `setup.ps1` for Windows, `codex_setup.sh` for Linux, and `install_and_start.ps1` and `windows_pipeline.ps1` for one-step installation.
  - `reports/` – generated goal reports and business summaries.
  - `notes/` – development notes, goals list and private notes.
  - `data/` – text corpus used to train the local Reah chatbot model.
@@ -126,6 +129,7 @@ Each module lives under `modules/` and is imported by the main script.
 | `IntegrityCheck.psm1` | Save and verify SHA256 hashes of scripts to detect tampering. | `ReAI` CLI (`-SaveIntegrity`, `-VerifyIntegrity`) | `Get-FileHash` |
 | `HistorySummary.psm1` | Summarize the log history to minimize token usage. | `ReAI` when `-SummarizeHistory` is used or from menu | `Compress-Text` |
 | `PipelineAutomation.psm1` | Run the full research and self-evolution pipeline automatically. | `ReAI` when `-AutoPipeline` is used | `Analyze-ReAIGoals`, `Invoke-GoalProcessing`, `Update-ScriptCode`, `Summarize-History`, `Test-Integrity`, `Protect-ReAILog` |
+| `WindowsPipeline.psm1` | Runs the AutoPipeline and ensures the Windows service and terminal are running. | `ReAI` when `-WinPipeline` is used | `Invoke-AutoPipeline`, `Start-Service`, `Open-ReAITerminal` |
 | `EnvironmentSetup.psm1` | Prompt for missing environment variables like `OPENAI_API_KEY`. | `ReAI` and menu | `[Environment]::SetEnvironmentVariable` |
 | `ReahModel.psm1` | Builds a simple Markov chain model from corpus text and chat history. | `Chatbot.psm1` | `Get-Content`, `Add-Content` |
 | `Chatbot.psm1` | Interactive conversation using the local model or GPT with transcripts saved. | `ReAI` when `-Chat` or `-ChatGPT` is used or from menu | `ReahModel.psm1`, `Invoke-GPT` |

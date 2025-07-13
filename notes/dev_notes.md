@@ -76,3 +76,5 @@ All persistent state is stored in `state.json` at the project root.
 - SelfEvolution module measures code metrics and runs self-refactor plus tests when -SelfEvolve is used. The routine now compares metrics before and after to decide if the change is beneficial.
 - CLI flag -SelfEvolve triggers Invoke-SelfEvolution from SelfEvolution module and logs the evaluation result.
 - Initialize-Security runs at startup to secure the state file, apply secure mode from state.json and automatically verify integrity and encrypt logs/reports when secure mode is active.
+\n- **WindowsPipeline.psm1** – ensures the Windows service is running and executes AutoPipeline. Invoked with `-WinPipeline` or via windows_pipeline.ps1.
+
