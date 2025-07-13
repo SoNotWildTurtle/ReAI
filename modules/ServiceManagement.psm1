@@ -1,4 +1,5 @@
 function Start-ReAIService {
+    if (-not $IsWindows) { Write-Warning 'Service management is Windows-only.'; return }
     if (-not (Test-AdminPrivileges)) { Write-Warning 'Administrator privileges required.'; return }
     if (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue) {
         Start-Service -Name $ServiceName
@@ -9,6 +10,7 @@ function Start-ReAIService {
 }
 
 function Stop-ReAIService {
+    if (-not $IsWindows) { Write-Warning 'Service management is Windows-only.'; return }
     if (-not (Test-AdminPrivileges)) { Write-Warning 'Administrator privileges required.'; return }
     if (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue) {
         Stop-Service -Name $ServiceName
@@ -19,6 +21,7 @@ function Stop-ReAIService {
 }
 
 function Restart-ReAIService {
+    if (-not $IsWindows) { Write-Warning 'Service management is Windows-only.'; return }
     Stop-ReAIService
     Start-ReAIService
 }
@@ -49,6 +52,7 @@ function Close-ReAITerminal {
 }
 
 function Monitor-ReAI {
+    if (-not $IsWindows) { Write-Warning 'Service monitoring is Windows-only.'; return }
     Write-Host 'Monitoring service. Press Ctrl+C to exit.'
     while ($true) {
         $svc = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue

@@ -4,7 +4,7 @@ The repository is organized into an entry script and a set of modules.
 All persistent state is stored in `state.json` at the project root.
 
 ## Directory Overview
-- `ReAI.ps1` – main entry point invoked from the CLI or by the Windows service.
+- `ReAI.ps1` – main entry point invoked from the CLI or by the Windows service (Windows only).
 - `modules/` – reusable PowerShell modules loaded by `ReAI.ps1`.
 - `scripts/` – helper scripts such as `setup.ps1` and any generated scripts.
 - `reports/` – markdown reports produced by goal processing.
@@ -43,7 +43,7 @@ All persistent state is stored in `state.json` at the project root.
 - The main script now reads the OpenAI key from the `OPENAI_API_KEY` environment variable and warns if it is missing.
 \n- Research pipeline now pulls results from Tor-based DuckDuckGo search and Google search for broader coverage.
 - Service monitor now reopens the terminal after restarting the service to maintain persistent I/O.
-- The Windows service launches `ReAI.ps1` without parameters so the interactive menu appears in the service terminal for user commands.
+ - The Windows service (Windows only) launches `ReAI.ps1` without parameters so the interactive menu appears in the service terminal for user commands.
 - New security module adds secure mode to block network access and protects the state file with ACLs.
 - New logging module standardizes log output across commands.
 - Goal processing module now callable via -ProcessGoal or -ProcessAllGoals.

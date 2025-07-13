@@ -9,11 +9,11 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 4. Set an `OPENAI_API_KEY` environment variable with your OpenAI key or run `./ReAI.ps1 -ConfigureTokens` to enter it interactively.
 5. Optionally set `REAI_ENC_KEY` with a Base64 AES key for file encryption. If not set, the first run generates a key, saves it to `enc_key.txt`, and sets the environment variable automatically.
 6. Optionally set `OPENAI_MAX_RPM` to your OpenAI account's request-per-minute limit. The script waits `240 / OPENAI_MAX_RPM` seconds between calls (or 60 seconds for `gpt-4o`). You can override the interval directly using `OPENAI_RATE_LIMIT`.
-7. Execute `./ReAI.ps1 -InstallService` to install the Windows service.
-   The service starts `ReAI.ps1` with no arguments so the interactive menu appears in its terminal window.
+7. Execute `./ReAI.ps1 -InstallService` to install the Windows service (Windows only).
+   The service starts `ReAI.ps1` with no arguments so the interactive menu appears in its terminal window. On non-Windows systems use the script directly instead of the service.
 
 ## Runtime Controls
-- `-StartService` / `-StopService` / `-RestartService` – manage the background service
+ - `-StartService` / `-StopService` / `-RestartService` – manage the background Windows service (Windows only)
 - `-ServiceStatus` – show current service status
 - `-Terminal` – open a log-tail terminal for persistent I/O
 - `-CloseTerminal` – close the log-tail terminal if open
@@ -106,7 +106,7 @@ Each module lives under `modules/` and is imported by the main script.
 | Module | Purpose | Called From | Calls |
 | ------ | ------- | ----------- | ----- |
 | `GoalManagement.psm1` | Manage goals with add, start, pause, complete, remove and list commands. | `ReAI` CLI | `Save-State` from `StateManagement.psm1` |
-| `ServiceManagement.psm1` | Start/stop/restart the Windows service, check status and manage a log-tail terminal with cross-platform detection. | `ReAI` CLI | Windows `Start-Service`, `Stop-Service`, `Get-Service` |
+| `ServiceManagement.psm1` | Start/stop/restart the Windows service (Windows only), check status and manage a log-tail terminal with cross-platform detection. | `ReAI` CLI | Windows `Start-Service`, `Stop-Service`, `Get-Service` |
 | `StateManagement.psm1` | Persist `$State` object to disk. | `GoalManagement.psm1`, others | none |
 | `OpenAIUtils.psm1` | OpenAI helpers with DuckDuckGo (Tor), Google, Google Scholar and arXiv search plus request throttling via `Set-GPTRateLimit`. | `GoalProcessing.psm1`, `SelfRefactor.psm1`, `ResearchSummary.psm1`, tests | `Invoke-RestMethod`, `curl`, `ConvertFrom-Html` |
 | `GoalProcessing.psm1` | Generates research scripts and reports for a goal. | `ReAI` when `-ProcessGoal` or `-ProcessAllGoals` is used | `Invoke-GPT`, `Search-Web`, `Get-UrlSummary` |
