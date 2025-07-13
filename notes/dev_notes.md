@@ -44,7 +44,7 @@ All persistent state is stored in `state.json` at the project root.
 \n- Research pipeline now pulls results from Tor-based DuckDuckGo search and Google search for broader coverage.
 - Service monitor now reopens the terminal after restarting the service to maintain persistent I/O.
  - The Windows service (Windows only) launches `ReAI.ps1` without parameters so the interactive menu appears in the service terminal for user commands.
-- New security module adds secure mode to block network access and protects the state file with ACLs.
+ - New security module adds secure mode to block network access and protects the state file with ACLs. State file protection now runs only on Windows to avoid errors on Linux.
 - New logging module standardizes log output across commands.
 - Goal processing module now callable via -ProcessGoal or -ProcessAllGoals.
 - Port forwarding can be controlled with -StartForwarding and -StopForwarding.

@@ -91,6 +91,42 @@ foreach ($dir in @($global:ModulesDir, $global:ScriptsDir, $global:ReportsDir, $
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
 }
 
+# Load persistent state before importing modules so security routines can access it
+if (Test-Path $global:StateFile) {
+    try {
+        $json = Get-Content $global:StateFile -Raw
+        $global:State = $json | ConvertFrom-Json
+        $global:State = [PSCustomObject]$global:State
+    } catch {
+        Write-Warning "Failed to parse state file. Starting with defaults."
+        $global:State = $null
+    }
+}
+
+if (-not $global:State) {
+    $global:State = [PSCustomObject]@{
+        goals      = @(
+            "Research quantum mind-uploading",
+            "Draft business platform proposal",
+            "Virtualization of human brain based on next gen research using any methods",
+            "Become a superior research-intelligence with a 'do no harm' mentality"
+        )
+        inProgress = @()
+        completed  = @()
+        iterations = 0
+        versions   = @()
+        secure     = $false
+    }
+}
+
+if (-not ($global:State.PSObject.Properties.Name -contains 'inProgress')) {
+    $global:State | Add-Member -Name inProgress -Value @() -MemberType NoteProperty
+}
+if (-not ($global:State.PSObject.Properties.Name -contains 'secure')) {
+    $global:State | Add-Member -Name secure -Value $false -MemberType NoteProperty
+}
+Ensure-StateProtection
+
 # Load any local modules for extended functionality
 function Import-AllModules {
     $mods = Get-ChildItem -Path $global:ModulesDir -Filter '*.psm1'
@@ -134,36 +170,6 @@ if ($InstallService) {
     Write-Host "Service installed and started."
     return
 }
-
-if (Test-Path $global:StateFile) {
-    try {
-        $json = Get-Content $global:StateFile -Raw
-        $global:State = $json | ConvertFrom-Json
-        $global:State = [PSCustomObject]$global:State
-    } catch {
-        Write-Warning "Failed to parse state file. Starting with defaults."
-        $global:State = $null
-    }
-}
-
-if (-not $global:State) {
-    $global:State = [PSCustomObject]@{
-        goals      = @("Research quantum mind-uploading", "Draft business platform proposal", "Virtualization of human brain based on next gen research using any methods", "Become a superior research-intelligence with a 'do no harm' mentality")
-        inProgress = @()
-        completed  = @()
-        iterations = 0
-        versions   = @()
-        secure     = $false
-    }
-}
-
-if (-not $global:State.PSObject.Properties.Name -contains 'inProgress') {
-    $global:State | Add-Member -Name inProgress -Value @() -MemberType NoteProperty
-}
-if (-not $global:State.PSObject.Properties.Name -contains 'secure') {
-    $global:State | Add-Member -Name secure -Value $false -MemberType NoteProperty
-}
-Ensure-StateProtection
 
 try { Import-Module PowerHTML -ErrorAction Stop }
 catch { Write-Warning 'PowerHTML module not found. Some features may be unavailable.' }

@@ -32,8 +32,10 @@ function Test-SecureNetworkAccess {
 
 function Ensure-StateProtection {
     param([string]$File = $global:StateFile)
+    if (-not $IsWindows) { return }
     try {
         if (-not (Test-Path $File)) { return }
+        Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
         $acl = Get-Acl $File
         $user = [System.Security.Principal.NTAccount]::new($env:USERNAME)
         $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($user,'FullControl','Allow')

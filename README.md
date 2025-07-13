@@ -87,7 +87,7 @@ GPT requests are throttled automatically. `OPENAI_MAX_RPM` determines the wait t
 All state is stored in `state.json` in the project directory.
 The file is secured with restrictive permissions when first loaded.
 Secure mode disables network access for safer experimentation. When enabled it automatically encrypts logs and reports and runs an integrity check.
-Integrity checks verify script hashes to ensure the pipeline has not been tampered with. `Initialize-Security` runs at startup to protect the state file and apply the secure mode stored in `state.json`.
+Integrity checks verify script hashes to ensure the pipeline has not been tampered with. `Initialize-Security` runs at startup to protect the state file and apply the secure mode stored in `state.json`. On non-Windows systems the state file protection step is skipped.
 Set the `OPENAI_API_KEY` environment variable so modules can authenticate with OpenAI.
 
 ## Directory Layout

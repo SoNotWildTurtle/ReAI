@@ -54,3 +54,4 @@
 - [x] Evaluate self-evolution results and log outcome
 - [x] Add GPT chat mode with conversation logging
 - [x] Automatically initialize security on startup to enforce secure mode and encrypt logs/reports
+- [x] Fixed startup errors by loading state before initializing security and skipping state file protection on non-Windows
