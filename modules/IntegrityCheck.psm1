@@ -10,6 +10,8 @@ function Get-FileHashHex {
 
 function Save-IntegrityProfile {
     $files = @(
+        (Join-Path $global:WorkDir 'ReAI.ps1'),
+        (Get-ChildItem -Path $global:ModulesDir -Filter '*.psm1' -File | ForEach-Object { $_.FullName })
         (Join-Path $PSScriptRoot '..' 'ReAI.ps1'),
         (Get-ChildItem -Path $PSScriptRoot -Filter '*.psm1' -File | ForEach-Object { $_.FullName })
     )
@@ -18,11 +20,13 @@ function Save-IntegrityProfile {
         $hash = Get-FileHashHex -Path $f
         if ($hash) { $profile[$f] = $hash }
     }
+    $profile | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $global:WorkDir 'integrity.json')
     $profile | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $PSScriptRoot '..' 'integrity.json')
     Write-Host 'Integrity profile saved.'
 }
 
 function Test-Integrity {
+    $file = Join-Path $global:WorkDir 'integrity.json'
     $file = Join-Path $PSScriptRoot '..' 'integrity.json'
     if (-not (Test-Path $file)) { Write-Warning 'Integrity profile not found. Run Save-IntegrityProfile.'; return $false }
     $known = Get-Content $file | ConvertFrom-Json

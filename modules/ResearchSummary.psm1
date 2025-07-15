@@ -44,6 +44,18 @@ function Invoke-Research {
     $reportPath = Join-Path $global:ReportsDir "${base}_lab_report.md"
     $articlePath = Join-Path $global:ReportsDir "${base}_article.md"
     $planPath = Join-Path $global:ReportsDir "${base}_biz_plan.md"
+    $summaryPath = Join-Path $global:ReportsDir "${base}_summary.txt"
+    Set-Content $reportPath $labReport
+    Set-Content $articlePath $article
+    Set-Content $planPath $bizPlan
+    Save-CompressedText -Text $labReport -Path $summaryPath -MaxWords 150 | Out-Null
+    Protect-File -Path $reportPath | Out-Null
+    Protect-File -Path $articlePath | Out-Null
+    Protect-File -Path $planPath | Out-Null
+    Write-Host "Saved report to $reportPath" -ForegroundColor Green
+    Write-Host "Saved article to $articlePath" -ForegroundColor Green
+    Write-Host "Saved business plan to $planPath" -ForegroundColor Green
+    Write-Host "Saved summary to $summaryPath" -ForegroundColor Green
     Set-Content $reportPath $labReport
     Set-Content $articlePath $article
     Set-Content $planPath $bizPlan

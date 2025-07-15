@@ -1,5 +1,10 @@
 function Get-EncryptionKey {
     param([string]$EnvVar = 'REAI_ENC_KEY')
+    $keyFile = Join-Path $global:WorkDir 'enc_key.txt'
+    $key = ${env:$EnvVar}
+    if (-not $key -and (Test-Path $keyFile)) {
+        $key = Get-Content -Path $keyFile -Raw
+    }
     $key = $env:$EnvVar
     if (-not $key) {
         $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
@@ -7,6 +12,7 @@ function Get-EncryptionKey {
         $rng.GetBytes($bytes)
         $key = [Convert]::ToBase64String($bytes)
         [Environment]::SetEnvironmentVariable($EnvVar, $key, 'User')
+        try { Set-Content -Path $keyFile -Value $key -Force } catch {}
     }
     return [Convert]::FromBase64String($key)
 }

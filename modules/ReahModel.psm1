@@ -1,4 +1,8 @@
 $global:ReahModel = @{}
+$global:ReahCorpusPath = if ($global:ReahCorpusPath) { $global:ReahCorpusPath } else { Join-Path $PSScriptRoot '../data/reah_corpus.txt' }
+$dir = Split-Path $global:ReahCorpusPath -Parent
+if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir | Out-Null }
+if (-not (Test-Path $global:ReahCorpusPath)) { New-Item -ItemType File -Path $global:ReahCorpusPath | Out-Null }
 $global:ReahCorpusPath = Join-Path $PSScriptRoot '../data/reah_corpus.txt'
 
 function Train-ReahModel {
@@ -38,4 +42,17 @@ function Update-ReahCorpus {
     Add-Content -Path $global:ReahCorpusPath -Value $Line
 }
 
+function Import-ReahCorpus {
+    param([string]$Path)
+    if (-not (Test-Path $Path)) { return }
+    Get-Content $Path | ForEach-Object { Update-ReahCorpus -Line $_ }
+    Train-ReahModel
+}
+
+function Reset-ReahModel {
+    $global:ReahModel = @{}
+    if (Test-Path $global:ReahCorpusPath) { Remove-Item $global:ReahCorpusPath }
+}
+
+Export-ModuleMember -Function Train-ReahModel,Get-ReahResponse,Update-ReahCorpus,Import-ReahCorpus,Reset-ReahModel
 Export-ModuleMember -Function Train-ReahModel,Get-ReahResponse,Update-ReahCorpus

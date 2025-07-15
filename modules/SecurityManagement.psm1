@@ -2,6 +2,25 @@
 
 $Global:SecureMode = $false
 
+function Set-SecureMode {
+    param([bool]$Enabled)
+    $Global:SecureMode = $Enabled
+    if ($global:State -and $global:State.PSObject.Properties.Name -contains 'secure') {
+        $global:State.secure = $Enabled
+    }
+    if ($Enabled) {
+        Write-Host 'Secure mode enabled. Network operations blocked.' -ForegroundColor Yellow
+        if (Get-Command Protect-ReAILog -ErrorAction SilentlyContinue) { Protect-ReAILog }
+        if (Get-Command Protect-Reports -ErrorAction SilentlyContinue) { Protect-Reports }
+        if (Get-Command Test-Integrity -ErrorAction SilentlyContinue) { Test-Integrity | Out-Null }
+    } else {
+        Write-Host 'Secure mode disabled.' -ForegroundColor Yellow
+    }
+}
+
+function Enable-SecureMode { Set-SecureMode -Enabled:$true }
+
+function Disable-SecureMode { Set-SecureMode -Enabled:$false }
 function Enable-SecureMode {
     $Global:SecureMode = $true
     Write-Host 'Secure mode enabled. Network operations blocked.' -ForegroundColor Yellow
@@ -22,6 +41,10 @@ function Test-SecureNetworkAccess {
 
 function Ensure-StateProtection {
     param([string]$File = $global:StateFile)
+    if (-not $IsWindows) { return }
+    try {
+        if (-not (Test-Path $File)) { return }
+        Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
     param([string]$File = $StateFile)
     try {
         if (-not (Test-Path $File)) { return }
@@ -42,4 +65,15 @@ function Test-AdminPrivileges {
     } catch { return $false }
 }
 
+function Initialize-Security {
+    Ensure-StateProtection
+    if (-not $global:State.PSObject.Properties.Name -contains 'secure') {
+        $global:State | Add-Member -Name secure -Value $false -MemberType NoteProperty
+    }
+    if ($global:State.secure) { Set-SecureMode -Enabled:$true }
+    elseif ($env:REAI_SECURE_MODE -eq '1') { Set-SecureMode -Enabled:$true }
+    else { $Global:SecureMode = $false }
+}
+
+Export-ModuleMember -Function Enable-SecureMode,Disable-SecureMode,Set-SecureMode,Test-SecureNetworkAccess,Ensure-StateProtection,Test-AdminPrivileges,Initialize-Security
 Export-ModuleMember -Function Enable-SecureMode,Disable-SecureMode,Test-SecureNetworkAccess,Ensure-StateProtection,Test-AdminPrivileges
