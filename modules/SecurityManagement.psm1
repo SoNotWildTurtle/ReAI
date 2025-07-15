@@ -21,6 +21,15 @@ function Set-SecureMode {
 function Enable-SecureMode { Set-SecureMode -Enabled:$true }
 
 function Disable-SecureMode { Set-SecureMode -Enabled:$false }
+function Enable-SecureMode {
+    $Global:SecureMode = $true
+    Write-Host 'Secure mode enabled. Network operations blocked.' -ForegroundColor Yellow
+}
+
+function Disable-SecureMode {
+    $Global:SecureMode = $false
+    Write-Host 'Secure mode disabled.' -ForegroundColor Yellow
+}
 
 function Test-SecureNetworkAccess {
     if ($Global:SecureMode) {
@@ -36,6 +45,9 @@ function Ensure-StateProtection {
     try {
         if (-not (Test-Path $File)) { return }
         Import-Module Microsoft.PowerShell.Security -ErrorAction SilentlyContinue
+    param([string]$File = $StateFile)
+    try {
+        if (-not (Test-Path $File)) { return }
         $acl = Get-Acl $File
         $user = [System.Security.Principal.NTAccount]::new($env:USERNAME)
         $rule = New-Object System.Security.AccessControl.FileSystemAccessRule($user,'FullControl','Allow')
@@ -64,3 +76,4 @@ function Initialize-Security {
 }
 
 Export-ModuleMember -Function Enable-SecureMode,Disable-SecureMode,Set-SecureMode,Test-SecureNetworkAccess,Ensure-StateProtection,Test-AdminPrivileges,Initialize-Security
+Export-ModuleMember -Function Enable-SecureMode,Disable-SecureMode,Test-SecureNetworkAccess,Ensure-StateProtection,Test-AdminPrivileges

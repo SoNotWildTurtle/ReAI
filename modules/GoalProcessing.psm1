@@ -19,6 +19,14 @@ function Invoke-GoalProcessing {
     }
     $reportName = ($Goal -replace '\s','_') + '.md'
     $report  = Join-Path $global:ReportsDir $reportName
+    Start-Process -FilePath "$PSHOME\powershell.exe" -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$scriptFile") -WindowStyle Hidden -Wait
+    $reportName = ($Goal -replace '\s','_') + '.md'
+    $report  = Join-Path $global:ReportsDir $reportName
+    $scriptFile = Join-Path $ScriptsDir ([guid]::NewGuid().ToString() + '.ps1')
+    Set-Content $scriptFile $code
+    Start-Process -FilePath "$PSHOME\powershell.exe" -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',"$scriptFile") -WindowStyle Hidden -Wait
+    $reportName = ($Goal -replace '\s','_') + '.md'
+    $report  = Join-Path $ReportsDir $reportName
     $summary = Invoke-GPT -Messages @(
         @{role='system'; content='Summarize findings and propose next steps.'},
         @{role='user';   content="$plan`n$webnotes"}
@@ -35,6 +43,10 @@ function Invoke-GoalProcessing {
     Write-Host "Report saved to: $report" -ForegroundColor Green
     Write-Host "Saved summary to $summaryPath" -ForegroundColor Green
     Write-Host "Business summary saved to: $bizReport" -ForegroundColor Green
+}
+
+Export-ModuleMember -Function Invoke-GoalProcessing
+    Write-Host "Report and business summary saved to: $report"
 }
 
 Export-ModuleMember -Function Invoke-GoalProcessing

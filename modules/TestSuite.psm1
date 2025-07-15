@@ -149,3 +149,4 @@ function Test-APIConnectivity {
 }
 
 Export-ModuleMember -Function Invoke-TestSuite,Test-ScriptDependencies,Assert-Equal,Test-StateManagement,Test-APIKey,Test-PortForwarding,Test-APIConnectivity
+Export-ModuleMember -Function Invoke-TestSuite,Test-ScriptDependencies,Assert-Equal,Test-StateManagement,Test-APIKey,Test-PortForwarding,Test-APIConnectivity

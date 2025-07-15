@@ -7,6 +7,7 @@ function Test-Windows10 {
 function Start-ReAIService {
     if (-not $IsWindows) { Write-Warning 'Service management is Windows-only.'; return }
     if (-not (Test-Windows10)) { Write-Warning "Windows 10 or later required."; return }
+function Start-ReAIService {
     if (-not (Test-AdminPrivileges)) { Write-Warning 'Administrator privileges required.'; return }
     if (Get-Service -Name $ServiceName -ErrorAction SilentlyContinue) {
         Start-Service -Name $ServiceName
@@ -49,6 +50,10 @@ function Open-ReAITerminal {
     } else {
         $proc = Start-Process -FilePath $exe -ArgumentList '-NoExit','-Command', "Get-Content -Path \"$path\" -Wait" -PassThru
     }
+    $proc = Start-Process -FilePath $exe -ArgumentList '-NoExit','-Command', "Get-Content -Path \"$path\" -Wait" -WindowStyle Normal -PassThru
+    if (-not (Test-Path $LogFile)) { New-Item -ItemType File -Path $LogFile | Out-Null }
+    $exe = if (Test-Path (Join-Path $PSHOME 'pwsh')) { Join-Path $PSHOME 'pwsh' } else { Join-Path $PSHOME 'powershell.exe' }
+    $proc = Start-Process -FilePath $exe -ArgumentList '-NoExit','-Command', "Get-Content -Path \"$LogFile\" -Wait" -WindowStyle Normal -PassThru
     $global:ReAITerminal = $proc
     return $proc
 }
@@ -85,3 +90,4 @@ function Get-ReAIServiceStatus {
 }
 
 Export-ModuleMember -Function Start-ReAIService,Stop-ReAIService,Restart-ReAIService,Open-ReAITerminal,Close-ReAITerminal,Monitor-ReAI,Get-ReAIServiceStatus
+Export-ModuleMember -Function Start-ReAIService,Stop-ReAIService,Open-ReAITerminal,Close-ReAITerminal,Monitor-ReAI,Get-ReAIServiceStatus

@@ -5,6 +5,7 @@ function Prompt-EnvVariables {
             'OPENAI_MAX_RPM',
             'OPENAI_RATE_LIMIT'
         )
+        [string[]]$Variables = @('OPENAI_API_KEY')
     )
     foreach ($var in $Variables) {
         $current = [Environment]::GetEnvironmentVariable($var, 'Process')
@@ -12,6 +13,7 @@ function Prompt-EnvVariables {
             $value = Read-Host "Enter value for $var (leave blank to skip)"
             if ($value) {
                 ${env:$var} = $value
+                $env:$var = $value
                 [Environment]::SetEnvironmentVariable($var, $value, 'Process')
                 if ($var -eq 'OPENAI_API_KEY') { $global:OpenAIKey = $value }
             }
@@ -118,4 +120,4 @@ function Setup-ReAIEnvironment {
 }
 
 Export-ModuleMember -Function Prompt-EnvVariables, Setup-ReAIEnvironment, Test-PowerShellVersion
-
+Export-ModuleMember -Function Prompt-EnvVariables

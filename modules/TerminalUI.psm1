@@ -18,10 +18,10 @@ function Show-WarningBox {
 
 function Show-ReahBanner {
     $lines = @(
-        '  ___   _____       _        _    _',
-        ' |  _ \ |  ___|    / \      | |__| |',
-        ' | | |.)| .|__    / . \     | -. - |',
-        ' |  _ < | ___|   /  _  \   |  /\\  |',
+        '  ___   _____       _      _    _',
+        ' |  _ \ |  ___|    / \    | |__| |',
+        ' | | |.)| .|__    / . \   | - -  |',
+        ' |  _ < | ___|   /  _  \  |  --  |',
         ' |_| \_|_____|  /__/ \__\ |_|  |_|'
     )
     $width  = ($lines | Measure-Object Length -Maximum).Maximum
@@ -34,6 +34,15 @@ function Show-ReahBanner {
 }
 
 function Show-ReAIMenu {
+function Show-ReAIMenu {
+    $logo = @'
+ ____  _____     _     _    _
+|  _ \|  ___|   / \   | |__| |
+| |.) | .|__   / . \  | -. - |
+|  _ <|  ___| /  _  \ |  /\  |
+|_| \_|_____|/__/ \__\|_|  |_|
+'@
+    Write-Host $logo -ForegroundColor Cyan
     $sections = @(
         @{Title='Service Tasks'; Items=@(
             @{Name='Start Service'; Action={Start-ReAIService}; Description='Launch the Reah background service'},
@@ -64,6 +73,7 @@ function Show-ReAIMenu {
         @{Title='Chatbot'; Items=@(
             @{Name='Chat with ReAI'; Action={Start-ReAIChat}; Description='Interactive conversation using local model'},
             @{Name='Chat with ReAI (GPT)'; Action={Start-ReAIChat -UseGPT}; Description='Chat using OpenAI responses'}
+            @{Name='Chat with ReAI'; Action={Start-ReAIChat}; Description='Interactive conversation with the assistant'}
         )},
         @{Title='Network & Security'; Items=@(
             @{Name='Start Port Forwarding'; Action={Start-PortForwarding -LocalPort $PortForwarding.LocalPort -RemoteHost $PortForwarding.RemoteHost -RemotePort $PortForwarding.RemotePort}; Description='Proxy OpenAI traffic through local port'},
@@ -75,6 +85,9 @@ function Show-ReAIMenu {
             @{Name='Run Tests'; Action={Invoke-TestSuite -RunAll}; Description='Execute the automated test suite'},
             @{Name='Self Refactor'; Action={Update-ScriptCode}; Description='Attempt GPT-driven refactor'},
             @{Name='Self Evolve'; Action={Invoke-SelfEvolution -RunTests}; Description='Run refactor with tests and metrics'},
+        @{Title='Maintenance'; Items=@(
+            @{Name='Run Tests'; Action={Invoke-TestSuite -RunAll}; Description='Execute the automated test suite'},
+            @{Name='Self Refactor'; Action={Update-ScriptCode}; Description='Attempt GPT-driven refactor'},
             @{Name='Save Integrity Profile'; Action={Save-IntegrityProfile}; Description='Record script hashes for tamper detection'},
             @{Name='Verify Integrity'; Action={Test-Integrity}; Description='Compare hashes to ensure files are intact'},
             @{Name='Configure Tokens'; Action={Prompt-EnvVariables}; Description='Interactively set environment variables'},
@@ -101,6 +114,23 @@ function Show-ReAIMenu {
         $options[$num.ToString()] = @{Name='Exit'; Action={return $true}; Section=''}
 
         Write-Host "`n=== Reah Menu ===" -ForegroundColor Magenta
+            @{Name='Protect Reports'; Action={Protect-Reports}; Description='Encrypt all markdown reports'}
+        )}
+    )
+    if (-not $State.goals -or $State.goals.Count -eq 0) {
+        Show-WarningBox 'No current goals'
+    }
+    $options = @{}
+    $num = 1
+    foreach($sec in $sections){
+        foreach($item in $sec.Items){
+            $options[$num.ToString()] = $item + @{Section=$sec.Title}
+            $num++
+        }
+    }
+    $options[$num.ToString()] = @{Name='Exit'; Action={return $true}; Section=''}
+    do {
+        Write-Host "`n== Reah Menu ==" -ForegroundColor Yellow
         $current=''
         foreach($key in $options.Keys | Sort-Object {[int]$_}){
             $sec=$options[$key].Section
@@ -116,6 +146,54 @@ function Show-ReAIMenu {
         elseif ($options[$choice]) {
             $exit = & $options[$choice].Action
             if (-not $exit) { Read-Host 'Press Enter to continue' | Out-Null }
+            Write-Host " $key) $($item.Name) - $($item.Description)"
+        }
+        $choice = Read-Host 'Select option'
+        if ($options[$choice]) {
+            $exit = & $options[$choice].Action
+            if (-not $exit) { Read-Host 'Press Enter to continue' | Out-Null }
+function Show-ReAIMenu {
+    $logo = @'
+ ____  _____     _     _    _
+|  _ \|  ___|   / \   | |__| |
+| |.) | .|__   / . \  | ™v ™ |
+|  _ <|  ___| /  _  \ |  /\  |
+|_| \_|_____|/__/ \__\|_|  |_|
+'@
+    Write-Host $logo -ForegroundColor Cyan
+    $options = @{
+        '1' = @{ Name = 'Start Service'; Action = { Start-ReAIService } }
+        '2' = @{ Name = 'Stop Service'; Action = { Stop-ReAIService } }
+        '3' = @{ Name = 'Service Status'; Action = { $s = Get-ReAIServiceStatus; Write-Host "Status: $s" } }
+        '4' = @{ Name = 'Open Terminal'; Action = { Open-ReAITerminal } }
+        '5' = @{ Name = 'Close Terminal'; Action = { Close-ReAITerminal } }
+        '6' = @{ Name = 'Monitor Service'; Action = { Monitor-ReAI } }
+        '7'  = @{ Name = 'List Goals'; Action = { List-ReAIGoals } }
+        '8'  = @{ Name = 'Add Goal'; Action = { $g = Read-Host 'Enter goal'; if($g){ Add-ReAIGoal -Goal $g } } }
+        '9'  = @{ Name = 'Complete Goal'; Action = { $g = Read-Host 'Goal to complete'; if($g){ Complete-ReAIGoal -Goal $g } } }
+        '10' = @{ Name = 'Analyze Goals'; Action = { Analyze-ReAIGoals } }
+        '11' = @{ Name = 'Start Port Forwarding'; Action = { Start-PortForwarding -LocalPort $PortForwarding.LocalPort -RemoteHost $PortForwarding.RemoteHost -RemotePort $PortForwarding.RemotePort } }
+        '12' = @{ Name = 'Stop Port Forwarding'; Action = { Stop-PortForwarding } }
+        '13' = @{ Name = 'Self Refactor'; Action = { Update-ScriptCode } }
+        '14' = @{ Name = 'Run Tests'; Action = { Invoke-TestSuite -RunAll } }
+        '15' = @{ Name = 'Process All Goals'; Action = { foreach($g in $State.goals){ Invoke-GoalProcessing -Goal $g } } }
+        '16' = @{ Name = 'Process Goal'; Action = { $g = Read-Host 'Goal to process'; if($g){ Invoke-GoalProcessing -Goal $g } } }
+        '17' = @{ Name = 'Research Topic'; Action = { $t = Read-Host 'Topic to research'; if($t){ Invoke-Research -Topic $t } } }
+        '18' = @{ Name = 'Context Summary'; Action = { $t = Read-Host 'Text or topic'; if($t){ Get-CondensedContext -Text $t | Write-Host } } }
+        '19' = @{ Name = 'Compress Text'; Action = { $t = Read-Host 'Text to compress'; if($t){ Compress-Text -Text $t | Write-Host } } }
+        '20' = @{ Name = 'Enable Secure Mode'; Action = { Enable-SecureMode } }
+        '21' = @{ Name = 'Disable Secure Mode'; Action = { Disable-SecureMode } }
+        '22' = @{ Name = 'Save Integrity Profile'; Action = { Save-IntegrityProfile } }
+        '23' = @{ Name = 'Verify Integrity'; Action = { Test-Integrity } }
+        '24' = @{ Name = 'Summarize History'; Action = { Summarize-History | Write-Host } }
+        '25' = @{ Name = 'Exit'; Action = { return $true } }
+    }
+    do {
+        Write-Host "`n== ReAI Menu ==" -ForegroundColor Yellow
+        foreach ($key in $options.Keys) { Write-Host " $key) $($options[$key].Name)" }
+        $choice = Read-Host 'Select option'
+        if ($options[$choice]) {
+            $exit = & $options[$choice].Action
         } else {
             Write-Warning 'Invalid selection.'
         }
@@ -123,4 +201,5 @@ function Show-ReAIMenu {
 }
 
 Export-ModuleMember -Function Show-ReAIMenu,Show-InfoBox,Show-WarningBox,Show-ReahBanner
-
+Export-ModuleMember -Function Show-ReAIMenu,Show-InfoBox,Show-WarningBox
+Export-ModuleMember -Function Show-ReAIMenu

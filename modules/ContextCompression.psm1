@@ -7,6 +7,7 @@ function Compress-Text {
     if (-not (Test-SecureNetworkAccess) -or [string]::IsNullOrWhiteSpace($OpenAIKey)) {
         return Local-SummarizeText -Text $Text -MaxSentences 3
     }
+    if (-not (Test-SecureNetworkAccess)) { return '' }
     $prompt = "Summarize the text in under $MaxWords words"
     $result = Invoke-GPT -Messages @(
         @{role='system'; content=$prompt}
@@ -38,3 +39,4 @@ function Save-CompressedText {
 }
 
 Export-ModuleMember -Function Compress-Text,Compress-Conversation,Save-CompressedText
+Export-ModuleMember -Function Compress-Text,Compress-Conversation

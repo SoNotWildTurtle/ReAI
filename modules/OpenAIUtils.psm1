@@ -64,6 +64,7 @@ function Invoke-GPT {
                 Set-CachedGPTResponse -Messages $origMessages -Response $content
             }
             return $content
+            return $response.choices[0].message.content
         } catch {
             $lastError = $_.Exception
             if ($_.Exception.Response) {
@@ -114,6 +115,7 @@ function Search-DuckDuckGo {
                 Write-Warning 'curl not found; falling back to Invoke-RestMethod without Tor.'
                 $html = Invoke-RestMethod -Uri $uri -ErrorAction Stop
             }
+            $html = & curl -s -x socks5h://127.0.0.1:9050 $uri
         } else {
             $html = Invoke-RestMethod -Uri $uri -ErrorAction Stop
         }
@@ -142,6 +144,7 @@ function Search-Google {
                 Write-Warning 'curl not found; using Invoke-RestMethod without Tor.'
                 $html = Invoke-RestMethod -Uri $uri -Headers $headers -ErrorAction Stop
             }
+            $html = & curl -s -x socks5h://127.0.0.1:9050 -A "Mozilla/5.0" $uri
         } else {
             $html = Invoke-RestMethod -Uri $uri -Headers $headers -ErrorAction Stop
         }
@@ -237,3 +240,4 @@ function Get-UrlSummary {
 }
 
 Export-ModuleMember -Function Invoke-GPT,Search-DuckDuckGo,Search-Google,Search-Scholar,Search-ArXiv,Search-Web,Get-UrlSummary,Set-GPTRateLimit
+Export-ModuleMember -Function Invoke-GPT,Search-DuckDuckGo,Search-Google,Search-Scholar,Search-ArXiv,Search-Web,Get-UrlSummary

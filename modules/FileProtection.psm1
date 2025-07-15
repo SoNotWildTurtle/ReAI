@@ -5,6 +5,7 @@ function Get-EncryptionKey {
     if (-not $key -and (Test-Path $keyFile)) {
         $key = Get-Content -Path $keyFile -Raw
     }
+    $key = $env:$EnvVar
     if (-not $key) {
         $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
         $bytes = New-Object byte[] 32

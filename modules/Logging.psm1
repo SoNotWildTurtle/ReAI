@@ -11,6 +11,10 @@ function Write-ReAILog {
         try { Add-Content -Path $path -Value $line } catch { Write-Warning "Failed to write log: $_" }
     } else {
         Write-Warning 'Log file path not defined.'
+    try {
+        Add-Content -Path $LogFile -Value $line
+    } catch {
+        Write-Warning "Failed to write log: $_"
     }
     Write-Host $line
 }
@@ -23,3 +27,4 @@ function Protect-ReAILog {
 }
 
 Export-ModuleMember -Function Write-ReAILog,Protect-ReAILog
+Export-ModuleMember -Function Write-ReAILog

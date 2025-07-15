@@ -33,6 +33,7 @@
 - [x] Prompt for environment variables like API keys at startup.
 - [x] Organize terminal menu into sections and add a Configure Tokens option.
 - [x] Display a stylized Reah ASCII banner and detailed descriptions in the interactive menu.
+- [x] Display a Reah banner and detailed descriptions in the interactive menu.
 - [x] Improve menu with GUI-like boxes and warning when no goals exist.
 - [x] Provide interactive chatbot access via CLI and menu.
 - [x] Replace GPT-powered chatbot with locally trained Markov chain model.
@@ -66,3 +67,4 @@
 - [ ] Add configuration export and import commands.
 - [ ] Support systemd service integration on Linux.
 - [ ] Provide packaging scripts for distribution.
+- [x] Start research, research paper creation (analyze and contextualize research) on Virtualizing the human brain for Sword Art Online gaming after death, and begin work on business proposals.

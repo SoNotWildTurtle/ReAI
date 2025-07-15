@@ -26,3 +26,4 @@ function Update-ScriptCode {
 }
 
 Export-ModuleMember -Function Update-ScriptCode
+Export-ModuleMember -Function Update-ScriptCode
