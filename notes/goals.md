@@ -56,6 +56,7 @@
 - [x] Automatically initialize security on startup to enforce secure mode and encrypt logs/reports
 - [x] Fixed startup errors by loading state before initializing security and skipping state file protection on non-Windows
 - [x] Add WindowsPipeline module and CLI flag for Windows integrated pipeline
+- [x] Expanded EnvironmentSetup with automatic dependency installation and directory checks.
 
 - [x] Require Windows 10 or later for service management features
 - [ ] Expand Pester test suite to cover all modules.

@@ -60,7 +60,7 @@ All persistent state is stored in `state.json` at the project root.
 - HistorySummary module summarizes reai.log to trim old conversation for minimal token use. Accessible via -SummarizeHistory and a menu entry.
 - PipelineAutomation module runs goal analysis, goal processing, self-refactor and history summarization in one command via -AutoPipeline. It can also verify integrity and protect logs/reports when -VerifyIntegrity or -ProtectLogs/-ProtectReports are provided.
 - Research pipeline extended with Google Scholar and arXiv sources for deeper academic coverage.
-- EnvironmentSetup module prompts for required environment variables like OPENAI_API_KEY when missing.
+- EnvironmentSetup module now verifies required directories, installs PowerHTML and Pester if they are missing, prompts for environment variables and generates an encryption key when needed.
 - Terminal menu reorganized into categories and includes an option to configure tokens.
 - Menu now shows a stylized ASCII "Reah" banner made of alien-like letters and describes each command under Service, Goal, Research, Network and Maintenance sections.
  - FileProtection module compresses and encrypts logs and reports. If REAI_ENC_KEY is unset a key is generated and saved to `enc_key.txt` for reuse. Invoked automatically by ResearchSummary and via -ProtectLogs/-ProtectReports.

@@ -131,7 +131,7 @@ Each module lives under `modules/` and is imported by the main script.
 | `HistorySummary.psm1` | Summarize the log history to minimize token usage. | `ReAI` when `-SummarizeHistory` is used or from menu | `Compress-Text` |
 | `PipelineAutomation.psm1` | Run the full research and self-evolution pipeline automatically. | `ReAI` when `-AutoPipeline` is used | `Analyze-ReAIGoals`, `Invoke-GoalProcessing`, `Update-ScriptCode`, `Summarize-History`, `Test-Integrity`, `Protect-ReAILog` |
 | `WindowsPipeline.psm1` | Runs the AutoPipeline and ensures the Windows service and terminal are running. | `ReAI` when `-WinPipeline` is used | `Invoke-AutoPipeline`, `Start-Service`, `Open-ReAITerminal` |
-| `EnvironmentSetup.psm1` | Prompt for missing environment variables like `OPENAI_API_KEY`. | `ReAI` and menu | `[Environment]::SetEnvironmentVariable` |
+| `EnvironmentSetup.psm1` | Verify directories, install PowerHTML/Pester, prompt for required environment variables and generate an encryption key if needed. | `ReAI` and menu | `Install-Module`, `Get-EncryptionKey` |
 | `ReahModel.psm1` | Builds a simple Markov chain model from corpus text and chat history. | `Chatbot.psm1` | `Get-Content`, `Add-Content` |
 | `Chatbot.psm1` | Interactive conversation using the local model or GPT with transcripts saved. | `ReAI` when `-Chat` or `-ChatGPT` is used or from menu | `ReahModel.psm1`, `Invoke-GPT` |
 | `FileProtection.psm1` | Compresses and encrypts logs and reports for defensive storage. | `ReAI` CLI and `ResearchSummary.psm1` | `Protect-File`, `Unprotect-File` |

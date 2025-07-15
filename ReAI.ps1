@@ -158,6 +158,9 @@ function Import-AllModules {
 }
 
 Import-AllModules
+if (Get-Command Setup-ReAIEnvironment -ErrorAction SilentlyContinue) {
+    Setup-ReAIEnvironment
+}
 if (Get-Command Initialize-Security -ErrorAction SilentlyContinue) {
     Initialize-Security
 } elseif (Test-Path (Join-Path $global:ModulesDir 'IntegrityCheck.psm1')) {
