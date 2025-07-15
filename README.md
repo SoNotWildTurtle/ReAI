@@ -12,7 +12,8 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 7. Set an `OPENAI_API_KEY` environment variable with your OpenAI key or run `./ReAI.ps1 -ConfigureTokens` to enter it interactively.
 8. Optionally set `REAI_ENC_KEY` with a Base64 AES key for file encryption. If not set, the first run generates a key, saves it to `enc_key.txt`, and sets the environment variable automatically.
 9. Optionally set `OPENAI_MAX_RPM` to your OpenAI account's request-per-minute limit. The script waits `240 / OPENAI_MAX_RPM` seconds between calls (or 60 seconds for `gpt-4o`). You can override the interval directly using `OPENAI_RATE_LIMIT`.
-10. Execute `./ReAI.ps1 -InstallService` to install the Windows service (Windows 10+ only).
+10. GPT responses are cached under `cache/gpt_cache.json` so repeated prompts reuse previous answers when available.
+11. Execute `./ReAI.ps1 -InstallService` to install the Windows service (Windows 10+ only).
    The service starts `ReAI.ps1` with no arguments so the interactive menu appears in its terminal window. On non-Windows systems use the script directly instead of the service.
 
 ## Runtime Controls
@@ -46,6 +47,7 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 - `-VerifyIntegrity` – check script hashes to detect tampering
 - `-ProtectLogs` – compress and encrypt the log file
 - `-ProtectReports` – compress and encrypt all markdown reports
+- `-ClearCache` – remove all cached GPT responses
 - `-ConfigureTokens` – interactively set environment variables like API keys
  - `-Chat` – open an interactive chatbot session powered by the local Reah model
  - `-ChatGPT` – chat using OpenAI responses instead of the local model
@@ -76,6 +78,7 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 | `-RunTests` | Execute the automated test suite |
 | `-SaveIntegrity` / `-VerifyIntegrity` | Manage SHA256 integrity profiles |
 | `-ProtectLogs` / `-ProtectReports` | Compress and encrypt output files |
+| `-ClearCache` | Remove cached GPT responses |
 | `-ConfigureTokens` | Prompt for any missing environment variables |
 | `-Chat` | Open the local Reah chatbot session |
 | `-ChatGPT` | Chat with Reah using OpenAI responses |
@@ -102,8 +105,9 @@ Set the `OPENAI_API_KEY` environment variable so modules can authenticate with O
  - `reports/` – generated goal reports and business summaries.
  - `notes/` – development notes, goals list and private notes.
  - `data/` – text corpus used to train the local Reah chatbot model.
- - `chat_logs/` – saved transcripts from interactive chatbot sessions.
- - `enc_key.txt` – generated AES key if `REAI_ENC_KEY` is not set.
+- `chat_logs/` – saved transcripts from interactive chatbot sessions.
+- `cache/` – stored GPT responses for caching.
+- `enc_key.txt` – generated AES key if `REAI_ENC_KEY` is not set.
 
 ## Modules
 Each module lives under `modules/` and is imported by the main script.
@@ -136,4 +140,5 @@ Each module lives under `modules/` and is imported by the main script.
 | `ReahModel.psm1` | Builds a simple Markov chain model from corpus text and chat history. | `Chatbot.psm1` | `Get-Content`, `Add-Content` |
 | `Chatbot.psm1` | Interactive conversation using the local model or GPT with transcripts saved. | `ReAI` when `-Chat` or `-ChatGPT` is used or from menu | `ReahModel.psm1`, `Invoke-GPT` |
 | `FileProtection.psm1` | Compresses and encrypts logs and reports for defensive storage. | `ReAI` CLI and `ResearchSummary.psm1` | `Protect-File`, `Unprotect-File` |
+| `GPTCache.psm1` | Stores GPT request/response pairs to minimize API usage. | `OpenAIUtils.psm1` | `ConvertTo-Json`, `Get-FileHash` |
 | `Help.psm1` | Display usage information for CLI and menu. | `ReAI` and menu | none |

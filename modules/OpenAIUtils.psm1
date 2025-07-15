@@ -35,6 +35,11 @@ function Invoke-GPT {
         Write-Warning "OpenAI API key is not set. Please set the `$OpenAIKey variable."
         return $null
     }
+    $cached = $null
+    if (Get-Command Get-CachedGPTResponse -ErrorAction SilentlyContinue) {
+        $cached = Get-CachedGPTResponse -Messages $Messages
+    }
+    if ($cached) { return $cached }
     $body = @{ model = $Model; messages = $Messages; max_tokens = $Max; temperature = 0.7 }
     $headers = @{ Authorization = "Bearer $OpenAIKey"; "Content-Type" = "application/json" }
     $attempt = 0
@@ -50,7 +55,11 @@ function Invoke-GPT {
             $apiUrl = if ($global:OpenAIEndpoint) { "$($global:OpenAIEndpoint)/v1/chat/completions" } else { "https://api.openai.com/v1/chat/completions" }
             $response = Invoke-RestMethod -Uri $apiUrl -Method Post -Headers $headers -Body ($body | ConvertTo-Json -Depth 10) -ErrorAction Stop
             $script:LastGPTCall = Get-Date
-            return $response.choices[0].message.content
+            $content = $response.choices[0].message.content
+            if (Get-Command Set-CachedGPTResponse -ErrorAction SilentlyContinue) {
+                Set-CachedGPTResponse -Messages $Messages -Response $content
+            }
+            return $content
         } catch {
             $lastError = $_.Exception
             if ($_.Exception.Response) {

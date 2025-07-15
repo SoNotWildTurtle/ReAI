@@ -72,7 +72,8 @@ function Setup-ReAIEnvironment {
             $global:ScriptsDir,
             $global:ModulesDir,
             (Join-Path $global:WorkDir 'notes'),
-            (Join-Path $global:WorkDir 'data')
+            (Join-Path $global:WorkDir 'data'),
+            (Join-Path $global:WorkDir 'cache')
         )) {
         Ensure-Directory -Path $dir
     }

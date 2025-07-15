@@ -11,6 +11,7 @@ All persistent state is stored in `state.json` at the project root.
 - `notes/` – this folder (development notes, goals and private notes).
 - `data/` – corpus text used to train Reah's local language model.
 - `chat_logs/` – transcripts from chatbot sessions.
+- `cache/` – stored GPT responses for reuse.
 
 ## File Relationships
 - **ReAI.ps1** imports every `.psm1` under `modules/` via `Import-AllModules`. CLI switches invoke module functions.
@@ -81,3 +82,5 @@ All persistent state is stored in `state.json` at the project root.
 \n- ServiceManagement now checks for Windows 10 or later before managing the service.
 - EnvironmentSetup now verifies the PowerShell version, runs Test-ScriptDependencies and displays progress using bordered info boxes.
 - The Reah banner is surrounded with a cyan border and the menu prompt accepts `Q` to quit.
+- New GPTCache module stores chat completions under `cache/gpt_cache.json` so repeated prompts skip API calls. OpenAIUtils now checks this cache before each request.
+- The main script accepts `-ClearCache` to remove cached responses via `Clear-GPTCache`.

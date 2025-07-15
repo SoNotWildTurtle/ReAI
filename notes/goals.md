@@ -61,7 +61,8 @@
 
 - [x] Require Windows 10 or later for service management features
 - [ ] Expand Pester test suite to cover all modules.
-- [ ] Implement caching of GPT responses to reduce API usage.
+- [x] Implement caching of GPT responses to reduce API usage.
+- [ ] Add CLI flag to clear the GPT cache.
 - [ ] Add configuration export and import commands.
 - [ ] Support systemd service integration on Linux.
 - [ ] Provide packaging scripts for distribution.

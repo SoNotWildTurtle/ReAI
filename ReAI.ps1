@@ -43,6 +43,7 @@ param(
     ,[switch]$VerifyIntegrity
     ,[switch]$ProtectLogs
     ,[switch]$ProtectReports
+    ,[switch]$ClearCache
     ,[switch]$ConfigureTokens
     ,[switch]$Chat
     ,[switch]$ChatGPT
@@ -236,6 +237,7 @@ if ($WinPipeline) {
 if ($VerifyIntegrity) { Write-ReAILog -Message 'Verifying integrity'; Test-Integrity; return }
 if ($ProtectLogs) { Write-ReAILog -Message 'Protecting log file'; Protect-ReAILog; return }
 if ($ProtectReports) { Write-ReAILog -Message 'Protecting reports'; Protect-Reports; return }
+if ($ClearCache) { Write-ReAILog -Message 'Clearing GPT cache'; Clear-GPTCache; Write-Host 'GPT cache cleared.'; return }
 if ($ConfigureTokens) { Prompt-EnvVariables; return }
 if ($ChatGPT) { Start-ReAIChat -UseGPT; return }
 if ($Chat) { Start-ReAIChat; return }
