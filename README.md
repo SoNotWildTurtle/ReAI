@@ -8,10 +8,11 @@ ReAI is a PowerShell-based research assistant designed for experimentation with 
 3. Windows service features require Windows 10 or later.
 4. Alternatively on Codex or other Linux environments run `scripts/codex_setup.sh` to install PowerShell and project dependencies.
 5. On Windows you may run `scripts/setup.ps1` directly to install required PowerShell modules and create runtime directories.
-6. Set an `OPENAI_API_KEY` environment variable with your OpenAI key or run `./ReAI.ps1 -ConfigureTokens` to enter it interactively.
-7. Optionally set `REAI_ENC_KEY` with a Base64 AES key for file encryption. If not set, the first run generates a key, saves it to `enc_key.txt`, and sets the environment variable automatically.
-8. Optionally set `OPENAI_MAX_RPM` to your OpenAI account's request-per-minute limit. The script waits `240 / OPENAI_MAX_RPM` seconds between calls (or 60 seconds for `gpt-4o`). You can override the interval directly using `OPENAI_RATE_LIMIT`.
-9. Execute `./ReAI.ps1 -InstallService` to install the Windows service (Windows 10+ only).
+6. On first launch the `EnvironmentSetup` module verifies your PowerShell version, installs missing modules and prompts for tokens. Progress is shown with bordered info boxes.
+7. Set an `OPENAI_API_KEY` environment variable with your OpenAI key or run `./ReAI.ps1 -ConfigureTokens` to enter it interactively.
+8. Optionally set `REAI_ENC_KEY` with a Base64 AES key for file encryption. If not set, the first run generates a key, saves it to `enc_key.txt`, and sets the environment variable automatically.
+9. Optionally set `OPENAI_MAX_RPM` to your OpenAI account's request-per-minute limit. The script waits `240 / OPENAI_MAX_RPM` seconds between calls (or 60 seconds for `gpt-4o`). You can override the interval directly using `OPENAI_RATE_LIMIT`.
+10. Execute `./ReAI.ps1 -InstallService` to install the Windows service (Windows 10+ only).
    The service starts `ReAI.ps1` with no arguments so the interactive menu appears in its terminal window. On non-Windows systems use the script directly instead of the service.
 
 ## Runtime Controls
@@ -131,7 +132,7 @@ Each module lives under `modules/` and is imported by the main script.
 | `HistorySummary.psm1` | Summarize the log history to minimize token usage. | `ReAI` when `-SummarizeHistory` is used or from menu | `Compress-Text` |
 | `PipelineAutomation.psm1` | Run the full research and self-evolution pipeline automatically. | `ReAI` when `-AutoPipeline` is used | `Analyze-ReAIGoals`, `Invoke-GoalProcessing`, `Update-ScriptCode`, `Summarize-History`, `Test-Integrity`, `Protect-ReAILog` |
 | `WindowsPipeline.psm1` | Runs the AutoPipeline and ensures the Windows service and terminal are running. | `ReAI` when `-WinPipeline` is used | `Invoke-AutoPipeline`, `Start-Service`, `Open-ReAITerminal` |
-| `EnvironmentSetup.psm1` | Verify directories, install PowerHTML/Pester, prompt for required environment variables and generate an encryption key if needed. | `ReAI` and menu | `Install-Module`, `Get-EncryptionKey` |
+| `EnvironmentSetup.psm1` | Validate PowerShell version, create directories, install modules, check dependencies and prompt for env variables. Generates an encryption key if none exists and reports progress with info boxes. | `ReAI` and menu | `Install-Module`, `Get-EncryptionKey`, `Test-ScriptDependencies` |
 | `ReahModel.psm1` | Builds a simple Markov chain model from corpus text and chat history. | `Chatbot.psm1` | `Get-Content`, `Add-Content` |
 | `Chatbot.psm1` | Interactive conversation using the local model or GPT with transcripts saved. | `ReAI` when `-Chat` or `-ChatGPT` is used or from menu | `ReahModel.psm1`, `Invoke-GPT` |
 | `FileProtection.psm1` | Compresses and encrypts logs and reports for defensive storage. | `ReAI` CLI and `ResearchSummary.psm1` | `Protect-File`, `Unprotect-File` |

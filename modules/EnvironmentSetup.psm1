@@ -44,8 +44,28 @@ function Ensure-Module {
     }
 }
 
+function Test-PowerShellVersion {
+    if (-not (Get-Command Show-WarningBox -ErrorAction SilentlyContinue)) {
+        function Show-WarningBox { param([string]$Message) ; Write-Warning $Message }
+    }
+    $cur = $PSVersionTable.PSVersion
+    if ($IsWindows -and $cur.Major -lt 5) {
+        Show-WarningBox "PowerShell 5.1 or newer required. Current: $cur"
+        return $false
+    }
+    elseif (-not $IsWindows -and $cur.Major -lt 7) {
+        Show-WarningBox "PowerShell 7 or newer recommended. Current: $cur"
+        return $false
+    }
+    return $true
+}
+
 function Setup-ReAIEnvironment {
-    # Ensure basic folders exist
+    if (Get-Command Show-InfoBox -ErrorAction SilentlyContinue) {
+        Show-InfoBox -Message 'Initializing environment...'
+    }
+    Test-PowerShellVersion | Out-Null
+
     foreach ($dir in @(
             $global:ReportsDir,
             $global:ChatLogsDir,
@@ -60,15 +80,25 @@ function Setup-ReAIEnvironment {
     # Install required modules if missing
     Ensure-Module -Name 'PowerHTML'
     Ensure-Module -Name 'Pester' -Version '5.3.1'
+    if (Get-Command Test-ScriptDependencies -ErrorAction SilentlyContinue) {
+        Test-ScriptDependencies | Out-Null
+    }
 
-    # Prompt for any missing environment variables
+    if (Get-Command Show-InfoBox -ErrorAction SilentlyContinue) {
+        Show-InfoBox -Message 'Checking environment variables...'
+    }
     Prompt-EnvVariables
 
-    # Ensure encryption key exists
+    if (Get-Command Show-InfoBox -ErrorAction SilentlyContinue) {
+        Show-InfoBox -Message 'Ensuring encryption key...'
+    }
     if (Get-Command Get-EncryptionKey -ErrorAction SilentlyContinue) {
         Get-EncryptionKey | Out-Null
     }
 
+    if (Get-Command Show-InfoBox -ErrorAction SilentlyContinue) {
+        Show-InfoBox -Message 'Verifying state file...'
+    }
     # Create default state file if needed
     if (-not (Test-Path $global:StateFile)) {
         $defaultState = [PSCustomObject]@{
@@ -81,7 +111,10 @@ function Setup-ReAIEnvironment {
         }
         $defaultState | ConvertTo-Json -Depth 5 | Set-Content $global:StateFile
     }
+    if (Get-Command Show-InfoBox -ErrorAction SilentlyContinue) {
+        Show-InfoBox -Message 'Environment setup complete.' -Color Cyan
+    }
 }
 
-Export-ModuleMember -Function Prompt-EnvVariables, Setup-ReAIEnvironment
+Export-ModuleMember -Function Prompt-EnvVariables, Setup-ReAIEnvironment, Test-PowerShellVersion
 

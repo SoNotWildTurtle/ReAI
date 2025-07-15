@@ -17,14 +17,20 @@ function Show-WarningBox {
 }
 
 function Show-ReahBanner {
-    $logo = @'
-  ___   _____       _        _    _
- |  _ \ |  ___|    / \      | |__| |
- | | |.)| .|__    / . \     | -. - |
- |  _ < | ___|   /  _  \   |  /\  |
- |_| \_|_____|  /__/ \__\ |_|  |_|
-'@
-    Write-Host $logo -ForegroundColor Cyan
+    $lines = @(
+        '  ___   _____       _        _    _',
+        ' |  _ \ |  ___|    / \      | |__| |',
+        ' | | |.)| .|__    / . \     | -. - |',
+        ' |  _ < | ___|   /  _  \   |  /\\  |',
+        ' |_| \_|_____|  /__/ \__\ |_|  |_|'
+    )
+    $width  = ($lines | Measure-Object Length -Maximum).Maximum
+    $border = '+' + ('-' * ($width + 2)) + '+'
+    Write-Host $border -ForegroundColor Cyan
+    foreach ($l in $lines) {
+        Write-Host ('| ' + $l.PadRight($width) + ' |') -ForegroundColor Cyan
+    }
+    Write-Host $border -ForegroundColor Cyan
 }
 
 function Show-ReAIMenu {
@@ -105,8 +111,9 @@ function Show-ReAIMenu {
             Write-Host -NoNewline "] " -ForegroundColor DarkGray
             Write-Host "$($item.Name) - $($item.Description)" -ForegroundColor White
         }
-        $choice = Read-Host 'Select option'
-        if ($options[$choice]) {
+        $choice = Read-Host 'Enter option number (or Q to quit)'
+        if ($choice -match '^[Qq]$') { $exit = $true }
+        elseif ($options[$choice]) {
             $exit = & $options[$choice].Action
             if (-not $exit) { Read-Host 'Press Enter to continue' | Out-Null }
         } else {

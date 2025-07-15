@@ -79,3 +79,5 @@ All persistent state is stored in `state.json` at the project root.
 \n- **WindowsPipeline.psm1** – ensures the Windows service is running and executes AutoPipeline. Invoked with `-WinPipeline` or via windows_pipeline.ps1.
 
 \n- ServiceManagement now checks for Windows 10 or later before managing the service.
+- EnvironmentSetup now verifies the PowerShell version, runs Test-ScriptDependencies and displays progress using bordered info boxes.
+- The Reah banner is surrounded with a cyan border and the menu prompt accepts `Q` to quit.
