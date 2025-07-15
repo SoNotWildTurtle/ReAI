@@ -1,0 +1,68 @@
+# Goals
+
+- [x] Implement CLI flags for starting and stopping the service.
+- [x] Provide a built-in terminal that tails the log file for persistent I/O.
+- [x] Add monitor mode that restarts the service if it stops.
+- [x] Support goal management via CLI commands.
+- [x] Auto-reopen terminal when monitoring restarts the service.
+- [x] Provide setup script to install dependencies.
+- [x] Modularize service and goal functions into separate modules.
+- [x] Split remaining logic into additional modules for easier maintenance.
+- [x] Document paths and module relationships in README and dev notes.
+- [x] Add interactive CLI menu for user-friendly control.
+- [x] Implement research summary workflow and business planning.
+- [x] Add Tor-based DuckDuckGo and Google search to research pipeline.
+- [x] Add dynamic goal analysis to generate subgoals for self-improvement.
+- [x] Introduce security module with secure mode and privilege checks.
+- [x] Add codex_setup.sh for Linux-based Codex environment.
+- [x] Add logging module for consistent log entries.
+- [x] Add closeable, cross-platform log terminal.
+- [x] Add goal processing automation via CLI.
+- [x] Expose port forwarding and self-refactor via new CLI options.
+- [x] Load OpenAI API key from OPENAI_API_KEY environment variable.
+- [x] Extend Terminal UI with research and secure mode options.
+- [x] Rate information reliability during research using new module.
+- [x] Aggregate reliability scores across sources with high/medium/low breakdown.
+- [x] Provide context identification and shortening via Google search to reduce token usage.
+- [x] Add service status query via CLI and menu.
+- [x] Detect tampering by hashing scripts and verifying with IntegrityCheck module.
+- [x] Implement text compression module for further context reduction.
+- [x] Summarize history logs to minimize future token usage.
+- [x] Automate the research and self-evolution pipeline with a single command.
+- [x] Expand research methodology with Google Scholar and arXiv sources.
+- [x] Prompt for environment variables like API keys at startup.
+- [x] Organize terminal menu into sections and add a Configure Tokens option.
+- [x] Display a stylized Reah ASCII banner and detailed descriptions in the interactive menu.
+- [x] Improve menu with GUI-like boxes and warning when no goals exist.
+- [x] Provide interactive chatbot access via CLI and menu.
+- [x] Replace GPT-powered chatbot with locally trained Markov chain model.
+- [x] Compress and encrypt research reports and log files for defense.
+- [x] Provide built-in help output via -Help flag and menu option.
+- [x] Extend automation pipeline to verify integrity and secure files when optional flags are supplied.
+- [x] Provide install_and_start.ps1 for automated setup and service start.
+- [x] Allow restarting the service via CLI and menu.
+- [x] Rename Maintenance section to Development Tools and add Run Auto Pipeline option.
+- [x] Provide a command reference table in the README for quick lookup.
+- [x] Persist generated encryption key to enc_key.txt when REAI_ENC_KEY is unset.
+- [x] Throttle OpenAI requests with configurable interval.
+- [x] Provide local fallback processing for context summarization.
+- [x] Adaptive rate limiting based on OpenAI docs with 1 request per minute for gpt-4o and 240/RPM for other models.
+- [x] Allow removing goals via CLI and menu
+- [x] Support starting and pausing goals with CLI flags and menu options
+- [x] Store compressed summaries of reports using Save-CompressedText
+- [x] Add SelfEvolution module with -SelfEvolve CLI option
+- [x] Evaluate self-evolution results and log outcome
+- [x] Add GPT chat mode with conversation logging
+- [x] Automatically initialize security on startup to enforce secure mode and encrypt logs/reports
+- [x] Fixed startup errors by loading state before initializing security and skipping state file protection on non-Windows
+- [x] Add WindowsPipeline module and CLI flag for Windows integrated pipeline
+- [x] Expanded EnvironmentSetup with automatic dependency installation and directory checks.
+- [x] EnvironmentSetup verifies PowerShell version and dependencies with info box output.
+
+- [x] Require Windows 10 or later for service management features
+- [ ] Expand Pester test suite to cover all modules.
+- [x] Implement caching of GPT responses to reduce API usage.
+- [x] Add CLI flag to clear the GPT cache.
+- [ ] Add configuration export and import commands.
+- [ ] Support systemd service integration on Linux.
+- [ ] Provide packaging scripts for distribution.
