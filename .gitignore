@@ -1,0 +1,13 @@
+reai.log*
+enc_key.txt
+reports/*
+!reports/.gitkeep
+state.json
+packages-microsoft-prod.deb
+scripts/*.ps1
+!scripts/setup.ps1
+!scripts/install_and_start.ps1
+!scripts/codex_setup.sh
+
+!scripts/windows_pipeline.ps1
+cache/
